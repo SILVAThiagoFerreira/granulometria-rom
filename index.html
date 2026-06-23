@@ -3,129 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Granulometria do Material Desmontado (ROM) | US Vale Verde</title>
-  <meta name="description" content="Dashboard de granulometria do material desmontado (ROM) da US Vale Verde — curva granulométrica, D80 e SPH Index.">
+  <title>Granulometria ROM · US Vale Verde</title>
+  <meta name="description" content="Granulometria do material desmontado (ROM) — US Vale Verde.">
   <link rel="preconnect" href="https://docs.google.com">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <header class="brand-bar">
-    <div class="brand-bar__inner">
-      <div class="logos">
-        <a class="logos__openblast" href="../index.html" aria-label="Voltar ao hub de dashboards">
-          <img src="./assets/openblast-logo.png" alt="OpenBlast">
-        </a>
-        <span class="logos__sep" aria-hidden="true"></span>
-        <img class="logos__enaex" src="./assets/enaex-logo.png" alt="Enaex">
-      </div>
-      <span class="unit-tag">US Vale Verde</span>
-    </div>
+  <header class="topbar">
+    <img class="topbar__logo" src="./assets/enaex-logo.png" alt="Enaex">
+    <span class="topbar__unit">US Vale Verde</span>
   </header>
 
-  <main class="dashboard">
-    <section class="title-row">
-      <div>
-        <p class="eyebrow">Granulometria</p>
-        <h1>Material Desmontado <span>(ROM)</span></h1>
-        <p class="subtitle">
-          Análise da curva granulométrica, D80 e SPH Index dos desmontes realizados na unidade.
-        </p>
+  <main class="page">
+    <section class="page-head">
+      <div class="page-head__title">
+        <p class="eyebrow">Granulometria · ROM</p>
+        <h1>Material Desmontado</h1>
       </div>
-
-      <div class="controls" id="controls">
-        <div class="control">
-          <label for="filter-year">Ano</label>
+      <div class="filters">
+        <label class="filter">
+          <span>Ano</span>
           <select id="filter-year"></select>
-        </div>
-        <div class="control">
-          <label for="filter-bench">Banco</label>
+        </label>
+        <label class="filter">
+          <span>Banco</span>
           <select id="filter-bench"></select>
-        </div>
-        <div class="control control--actions">
-          <button id="filter-reset" type="button" class="btn-ghost">Limpar filtros</button>
-        </div>
+        </label>
+        <button id="filter-reset" type="button" class="filter-reset">Limpar</button>
       </div>
     </section>
 
-    <section class="status-line" id="status-line" aria-live="polite">
-      <span class="dot" id="status-dot"></span>
-      <span id="status-text">Carregando dados da planilha…</span>
-      <span class="status-spacer"></span>
-      <span class="last-update" id="last-update"></span>
-    </section>
+    <p class="status" id="status" aria-live="polite">
+      <span class="status__dot" id="status-dot"></span>
+      <span id="status-text">Carregando…</span>
+      <span class="status__spacer"></span>
+      <span class="status__time" id="last-update"></span>
+    </p>
 
     <section class="kpis" id="kpis">
-      <article class="kpi">
-        <p class="kpi__label">Desmontes analisados</p>
+      <div class="kpi">
+        <p class="kpi__label">Desmontes</p>
         <p class="kpi__value" id="kpi-count">—</p>
-        <p class="kpi__hint" id="kpi-count-hint">&nbsp;</p>
-      </article>
-      <article class="kpi">
+        <p class="kpi__sub" id="kpi-count-hint">&nbsp;</p>
+      </div>
+      <div class="kpi">
         <p class="kpi__label">D80 médio</p>
         <p class="kpi__value" id="kpi-d80">—</p>
-        <p class="kpi__hint">Meta: ≤ 400 mm</p>
-      </article>
-      <article class="kpi">
+        <p class="kpi__sub">Meta ≤ 400 mm</p>
+      </div>
+      <div class="kpi">
         <p class="kpi__label">Conformidade D80</p>
         <p class="kpi__value" id="kpi-conf">—</p>
-        <p class="kpi__hint" id="kpi-conf-hint">Desmontes dentro da meta</p>
-      </article>
-      <article class="kpi">
+        <p class="kpi__sub" id="kpi-conf-hint">—</p>
+      </div>
+      <div class="kpi">
         <p class="kpi__label">Massa desmontada</p>
         <p class="kpi__value" id="kpi-mass">—</p>
-        <p class="kpi__hint" id="kpi-mass-hint">Total no período</p>
-      </article>
+        <p class="kpi__sub" id="kpi-mass-hint">—</p>
+      </div>
     </section>
 
     <section class="grid">
-      <article class="card card--wide">
-        <div class="card__head">
+      <div class="tile tile--wide">
+        <div class="tile__head">
           <h2>Curva granulométrica média</h2>
-          <p>Percentual passante acumulado por abertura (mm)</p>
+          <p>% passante por abertura</p>
         </div>
-        <div class="chart-box"><canvas id="chart-curve"></canvas></div>
-      </article>
+        <div class="tile__chart"><canvas id="chart-curve"></canvas></div>
+      </div>
 
-      <article class="card">
-        <div class="card__head">
-          <h2>Distribuição do D80</h2>
-          <p>Frequência do D80 (mm) por faixa</p>
+      <div class="tile">
+        <div class="tile__head">
+          <h2>Distribuição D80</h2>
+          <p>Desmontes por faixa (mm)</p>
         </div>
-        <div class="chart-box"><canvas id="chart-hist"></canvas></div>
-      </article>
+        <div class="tile__chart"><canvas id="chart-hist"></canvas></div>
+      </div>
 
-      <article class="card card--wide">
-        <div class="card__head">
-          <h2>D80 por desmonte vs Meta</h2>
-          <p>Linha verde: meta de 400 mm</p>
+      <div class="tile tile--wide">
+        <div class="tile__head">
+          <h2>D80 por desmonte</h2>
+          <p>Linha: meta 400 mm</p>
         </div>
-        <div class="chart-box chart-box--tall"><canvas id="chart-d80"></canvas></div>
-      </article>
+        <div class="tile__chart tile__chart--tall"><canvas id="chart-d80"></canvas></div>
+      </div>
 
-      <article class="card">
-        <div class="card__head">
+      <div class="tile">
+        <div class="tile__head">
           <h2>D80 médio por banco</h2>
-          <p>Comparativo entre bancadas</p>
+          <p>Por bancada</p>
         </div>
-        <div class="chart-box"><canvas id="chart-bench"></canvas></div>
-      </article>
+        <div class="tile__chart"><canvas id="chart-bench"></canvas></div>
+      </div>
 
-      <article class="card">
-        <div class="card__head">
-          <h2>Evolução do D80</h2>
-          <p>Média mensal ao longo do tempo</p>
+      <div class="tile">
+        <div class="tile__head">
+          <h2>Evolução D80</h2>
+          <p>Média mensal</p>
         </div>
-        <div class="chart-box"><canvas id="chart-trend"></canvas></div>
-      </article>
+        <div class="tile__chart"><canvas id="chart-trend"></canvas></div>
+      </div>
     </section>
 
-    <section class="footer-note">
-      <p>
-        Dados lidos em tempo real da planilha Google Sheets da operação.
-        Atualiza automaticamente a cada acesso — sem depender de servidor.
-      </p>
-      <a class="back-link" href="../index.html">← Voltar ao hub de dashboards</a>
-    </section>
+    <p class="source-note">Fonte: planilha operacional da unidade · atualização em tempo real.</p>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>

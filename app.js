@@ -9,16 +9,15 @@ const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx
 const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 const META_D80 = 400; // mm — meta de D80 da operação
 
-// ---------- Paleta ----------
+// ---------- Paleta (clean · consultoria) ----------
 const C = {
   green: "#1f4d3a",
-  greenSoft: "rgba(31,77,58,0.18)",
-  lime: "#c4d600",
-  limeSoft: "rgba(196,214,0,0.25)",
-  warn: "#d64545",
-  ok: "#2e7d52",
-  grid: "rgba(24,32,27,0.08)",
-  text: "#5d675f",
+  greenFill: "rgba(31,77,58,0.10)",
+  neutral: "#cdd1cc",   // não-conforme
+  meta: "#9aa099",      // linha de meta
+  grid: "rgba(0,0,0,0.06)",
+  text: "#6b7174",
+  ink: "#1a1a1a",
 };
 
 // Percentis da curva granulométrica na ordem esperada
@@ -233,7 +232,7 @@ function renderKpis(data) {
   const confPct = d80s.length ? (conf / d80s.length) * 100 : 0;
   const confEl = document.getElementById("kpi-conf");
   confEl.textContent = fmtNum(confPct, 0) + "%";
-  confEl.style.color = confPct >= 70 ? C.ok : confPct >= 40 ? "#b8860b" : C.warn;
+  confEl.style.color = confPct >= 70 ? C.green : "#9c4a3f";
   document.getElementById("kpi-conf-hint").textContent = `${fmtInt(conf)} de ${fmtInt(d80s.length)} dentro da meta`;
   document.getElementById("kpi-mass").textContent = fmtNum(mass / 1000, 0) + " kt";
   document.getElementById("kpi-mass-hint").textContent = fmtInt(mass) + " t desmontadas";
@@ -258,12 +257,13 @@ function renderCurve(data) {
         label: "Abertura média (mm)",
         data: means,
         borderColor: C.green,
-        backgroundColor: C.greenSoft,
-        borderWidth: 3,
-        pointBackgroundColor: C.lime,
+        backgroundColor: C.greenFill,
+        borderWidth: 2,
+        pointBackgroundColor: "#ffffff",
         pointBorderColor: C.green,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointBorderWidth: 1.5,
+        pointRadius: 3,
+        pointHoverRadius: 5,
         tension: 0.35,
         fill: true,
       }],
@@ -303,7 +303,7 @@ function renderHist(data) {
   const counts = buckets.map((b) =>
     data.filter((r) => r.d80 >= b.lo && r.d80 < b.hi).length
   );
-  const colors = buckets.map((b) => (b.hi <= META_D80 + 1 ? C.green : C.warn));
+  const colors = buckets.map((b) => (b.hi <= META_D80 + 1 ? C.green : C.neutral));
 
   buildChart("chart-hist", "bar", {
     type: "bar",
@@ -327,7 +327,7 @@ function renderD80(data) {
   const labels = ordered.map((r) => labelRec(r));
   const values = ordered.map((r) => r.d80);
   const meta = ordered.map((r) => r.meta || META_D80);
-  const colors = values.map((v) => (v <= META_D80 ? C.green : C.warn));
+  const colors = values.map((v) => (v <= META_D80 ? C.green : C.neutral));
 
   buildChart("chart-d80", "bar", {
     data: {
@@ -344,9 +344,9 @@ function renderD80(data) {
           type: "line",
           label: "Meta 400 mm",
           data: meta,
-          borderColor: C.lime,
-          borderWidth: 2.5,
-          borderDash: [6, 5],
+          borderColor: C.meta,
+          borderWidth: 1.5,
+          borderDash: [5, 4],
           pointRadius: 0,
           fill: false,
           order: 1,
@@ -384,7 +384,7 @@ function renderBench(data) {
       datasets: [{
         label: "D80 médio (mm)",
         data: entries.map((e) => e.mean),
-        backgroundColor: entries.map((e) => (e.mean <= META_D80 ? C.green : C.warn)),
+        backgroundColor: entries.map((e) => (e.mean <= META_D80 ? C.green : C.neutral)),
         borderRadius: 6,
       }],
     },
@@ -431,20 +431,21 @@ function renderTrend(data) {
         label: "D80 médio mensal (mm)",
         data: means,
         borderColor: C.green,
-        backgroundColor: C.limeSoft,
-        borderWidth: 3,
-        pointBackgroundColor: C.lime,
+        backgroundColor: C.greenFill,
+        borderWidth: 2,
+        pointBackgroundColor: "#ffffff",
         pointBorderColor: C.green,
-        pointRadius: 3.5,
+        pointBorderWidth: 1.5,
+        pointRadius: 3,
         tension: 0.3,
         fill: true,
       }, {
         type: "line",
         label: "Meta 400 mm",
         data: labels.map(() => META_D80),
-        borderColor: C.warn,
-        borderWidth: 2,
-        borderDash: [6, 5],
+        borderColor: C.meta,
+        borderWidth: 1.5,
+        borderDash: [5, 4],
         pointRadius: 0,
         fill: false,
       }],
@@ -489,12 +490,16 @@ function baseOpts() {
 }
 function tooltipBase() {
   return {
-    backgroundColor: "#18201b",
-    titleColor: C.lime,
-    bodyColor: "#fff",
+    backgroundColor: "#ffffff",
+    titleColor: C.ink,
+    bodyColor: C.ink,
+    borderColor: C.grid,
+    borderWidth: 1,
     padding: 10,
-    cornerRadius: 8,
+    cornerRadius: 2,
     displayColors: false,
+    titleFont: { weight: "600", size: 12 },
+    bodyFont: { size: 12 },
   };
 }
 function lineOpts(yTitle, extra = {}) {
@@ -553,6 +558,12 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatus("error", "Biblioteca de gráficos (Chart.js) não carregou. Verifique sua conexão.");
     return;
   }
+  // Defaults globais — visual clean
+  Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = C.text;
+  Chart.defaults.borderColor = C.grid;
+  Chart.defaults.plugins.tooltip = tooltipBase();
   loadSheet().catch((e) => console.error(e));
   // Revalida a cada 10 min enquanto a aba ficar aberta
   setInterval(() => loadSheet().catch(() => {}), 10 * 60 * 1000);
