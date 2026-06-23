@@ -270,6 +270,65 @@ body {
 .tile__chart { position: relative; flex: 1; min-height: 220px; }
 .tile__chart--tall { min-height: 280px; }
 
+/* ---------- Mini chart grid ---------- */
+.mini-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+.mini-chart {
+  background: var(--surface);
+  padding: 12px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+}
+.mini-chart__title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.mini-chart__canvas {
+  position: relative;
+  flex: 1;
+  min-height: 120px;
+}
+
+/* ---------- Percentile table ---------- */
+.pct-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.pct-table th,
+.pct-table td {
+  padding: 8px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--rule);
+}
+.pct-table th {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-alt);
+  text-align: right;
+  position: sticky;
+  top: 0;
+}
+.pct-table th:first-child,
+.pct-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+.pct-table tbody tr:hover { background: var(--surface-alt); }
+.pct-table .pct-ok { color: var(--gray); }
+.pct-table .pct-warn { color: var(--red); }
+
 /* ---------- Source note ---------- */
 .source-note {
   margin: 14px 0 0;

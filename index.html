@@ -6,7 +6,7 @@
   <title>Granulometria ROM · US Vale Verde</title>
   <meta name="description" content="Granulometria do material desmontado (ROM) — US Vale Verde.">
   <link rel="preconnect" href="https://docs.google.com">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=2">
 </head>
 <body>
   <header class="topbar">
@@ -21,10 +21,6 @@
         <h1>Material Desmontado</h1>
       </div>
       <div class="filters">
-        <label class="filter">
-          <span>Percentil</span>
-          <select id="filter-metric"><option value="80">Carregando...</option></select>
-        </label>
         <label class="filter">
           <span>Ano</span>
           <select id="filter-year"></select>
@@ -61,12 +57,12 @@
         <p class="kpi__sub" id="kpi-count-hint">&nbsp;</p>
       </div>
       <div class="kpi">
-        <p class="kpi__label" id="kpi-d80-label">P80 médio</p>
+        <p class="kpi__label">D80 médio</p>
         <p class="kpi__value" id="kpi-d80">—</p>
-        <p class="kpi__sub" id="kpi-d80-sub">Meta ≤ 400 mm</p>
+        <p class="kpi__sub">Meta ≤ 400 mm</p>
       </div>
       <div class="kpi">
-        <p class="kpi__label" id="kpi-conf-label">Conformidade P80</p>
+        <p class="kpi__label">Conformidade D80</p>
         <p class="kpi__value" id="kpi-conf">—</p>
         <p class="kpi__sub" id="kpi-conf-hint">—</p>
       </div>
@@ -77,6 +73,14 @@
       </div>
     </section>
 
+    <div id="percentile-table-wrap" class="tile tile--wide" style="margin-bottom:20px">
+      <div class="tile__head">
+        <h2>Resumo por percentil</h2>
+        <p>Média, mínimo e máximo de cada faixa</p>
+      </div>
+      <div id="percentile-table" style="overflow-x:auto"></div>
+    </div>
+
     <section class="grid">
       <div class="tile tile--wide">
         <div class="tile__head">
@@ -86,41 +90,33 @@
         <div class="tile__chart"><canvas id="chart-curve"></canvas></div>
       </div>
 
-      <div class="tile">
-        <div class="tile__head">
-          <h2 id="title-dist">Distribuição P80</h2>
-          <p>Desmontes por faixa (mm)</p>
-        </div>
-        <div class="tile__chart"><canvas id="chart-hist"></canvas></div>
-      </div>
-
       <div class="tile tile--wide">
         <div class="tile__head">
-          <h2 id="title-peritem">P80 por desmonte</h2>
-          <p id="sub-peritem">Linha: meta 400 mm</p>
+          <h2>Evolução mensal — todos os percentis</h2>
+          <p>Média mensal (mm)</p>
         </div>
-        <div class="tile__chart tile__chart--tall"><canvas id="chart-d80"></canvas></div>
+        <div class="tile__chart tile__chart--tall"><canvas id="chart-trend-all"></canvas></div>
       </div>
 
-      <div class="tile">
+      <div id="dist-grid" class="tile tile--wide">
         <div class="tile__head">
-          <h2 id="title-bench">P80 médio por banco</h2>
+          <h2>Distribuição por percentil</h2>
+          <p>Desmontes por faixa (mm)</p>
+        </div>
+        <div id="dist-charts" class="mini-chart-grid"></div>
+      </div>
+
+      <div id="bench-grid" class="tile tile--wide">
+        <div class="tile__head">
+          <h2>Média por banco e percentil</h2>
           <p>Por bancada</p>
         </div>
-        <div class="tile__chart"><canvas id="chart-bench"></canvas></div>
-      </div>
-
-      <div class="tile">
-        <div class="tile__head">
-          <h2 id="title-trend">Evolução P80</h2>
-          <p>Média mensal</p>
-        </div>
-        <div class="tile__chart"><canvas id="chart-trend"></canvas></div>
+        <div id="bench-charts" class="mini-chart-grid"></div>
       </div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="./app.js"></script>
+  <script src="./app.js?v=2"></script>
 </body>
 </html>
