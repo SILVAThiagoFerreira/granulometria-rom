@@ -540,12 +540,14 @@ function deepMerge(a, b) {
 
 // ---------- Status ----------
 function setStatus(kind, text) {
-  const el = document.getElementById("status-line");
+  const el = document.getElementById("status");
+  if (!el) return;
   el.classList.remove("is-loading", "is-ok", "is-error");
   if (kind === "loading") el.classList.add("is-loading");
   if (kind === "ok") el.classList.add("is-ok");
   if (kind === "error") el.classList.add("is-error");
-  document.getElementById("status-text").textContent = text;
+  const t = document.getElementById("status-text");
+  if (t) t.textContent = text;
 }
 function nowBR() {
   const d = new Date();
