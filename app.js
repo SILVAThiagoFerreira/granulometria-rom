@@ -578,7 +578,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
   // Defaults globais — visual clean
-  Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+  Chart.defaults.font.family = "'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
   Chart.defaults.font.size = 11;
   Chart.defaults.color = C.text;
   Chart.defaults.borderColor = C.grid;
