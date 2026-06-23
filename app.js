@@ -23,6 +23,30 @@ const C = {
 // Percentis da curva granulométrica na ordem esperada
 const PERCENTILES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
 
+// ---------- Plugin: linha-guia (crosshair) ao passar o mouse ----------
+const guideLinePlugin = {
+  id: "guideLine",
+  afterDraw(chart) {
+    const active = chart.getActiveElements();
+    if (!active.length) return;
+    const a = active[0];
+    const el = chart.getDatasetMeta(a.datasetIndex).data[a.index];
+    if (!el) return;
+    const ctx = chart.ctx;
+    const horizontal = chart.options.indexAxis === "y";
+    const area = chart.chartArea;
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(56,66,75,0.30)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    if (horizontal) { ctx.moveTo(area.left, el.y); ctx.lineTo(area.right, el.y); }
+    else { ctx.moveTo(el.x, area.top); ctx.lineTo(el.x, area.bottom); }
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
 // ---------- Utilitários ----------
 const norm = (s) =>
   (s || "").toString().normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -234,6 +258,41 @@ function render() {
   renderD80(data);
   renderBench(data);
   renderTrend(data);
+  updateActiveFilters();
+}
+
+// ---------- Chips de filtros ativos ----------
+const FILTER_DEFS = [
+  { id: "filter-year", label: "Ano" },
+  { id: "filter-month", label: "Mês", name: (v) => meses[+v - 1] },
+  { id: "filter-bench", label: "Banco", name: (v) => "Bco " + fmtInt(+v) },
+  { id: "filter-plan", label: "Plano" },
+];
+
+function updateActiveFilters() {
+  const box = document.getElementById("active-filters");
+  if (!box) return;
+  const chips = [];
+  FILTER_DEFS.forEach((f) => {
+    const sel = document.getElementById(f.id);
+    if (sel && sel.value) {
+      const display = f.name ? f.name(sel.value) : sel.value;
+      chips.push(
+        `<button class="chip" data-id="${f.id}" type="button">` +
+        `<span class="chip__k">${f.label}:</span> <span class="chip__v">${escapeText(display)}</span>` +
+        `<span class="chip__x" aria-hidden="true">×</span></button>`
+      );
+    }
+  });
+  box.innerHTML = chips.join("");
+  box.style.display = chips.length ? "" : "none";
+  box.querySelectorAll(".chip").forEach((btn) => {
+    btn.onclick = () => {
+      const s = document.getElementById(btn.dataset.id);
+      if (s) s.value = "";
+      render();
+    };
+  });
 }
 
 function renderKpis(data) {
@@ -330,7 +389,8 @@ function renderHist(data) {
         label: "Desmontes",
         data: counts,
         backgroundColor: colors,
-        borderRadius: 6,
+        hoverBackgroundColor: buckets.map((b) => (b.hi <= META_D80 + 1 ? "#2b333a" : "#b80510")),
+        borderRadius: 3,
         maxBarThickness: 56,
       }],
     },
@@ -355,6 +415,7 @@ function renderD80(data) {
           label: "D80 (mm)",
           data: values,
           backgroundColor: colors,
+          hoverBackgroundColor: values.map((v) => (v <= META_D80 ? "#2b333a" : "#b80510")),
           order: 2,
         },
         {
@@ -373,7 +434,20 @@ function renderD80(data) {
     options: barOpts("D80 (mm)", {
       plugins: {
         legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
-        tooltip: { callbacks: { label: (it) => `${it.dataset.label}: ${fmtNum(it.parsed.y, 1)} mm` } },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const r = ordered[items[0].dataIndex];
+              return "Plano " + (r.poligonal || "—");
+            },
+            label: (it) => {
+              if (it.dataset.type === "line") return "Meta: " + fmtNum(it.parsed.y, 0) + " mm";
+              const r = ordered[it.dataIndex];
+              const status = r.d80 <= META_D80 ? "✓ dentro da meta" : "✗ acima da meta";
+              return [`D80: ${fmtNum(r.d80, 1)} mm`, `Banco: ${r.banco != null ? fmtInt(r.banco) : "—"}`, `${status}`];
+            },
+          },
+        },
       },
       scales: {
         x: scaleTicks(),
@@ -381,6 +455,20 @@ function renderD80(data) {
       },
     }),
   });
+  // clique numa barra -> filtra por plano (poligonal)
+  const dc = CHARTS["chart-d80"];
+  if (dc) {
+    dc.options.onClick = (_evt, els) => {
+      if (!els.length) return;
+      const r = ordered[els[0].index];
+      const sel = document.getElementById("filter-plan");
+      sel.value = String(r.poligonal);
+      render();
+    };
+    dc.options.onHover = (evt, els) => {
+      if (evt.native && evt.native.target) evt.native.target.style.cursor = els.length ? "pointer" : "default";
+    };
+  }
 }
 
 // --- D80 médio por banco ---
@@ -615,6 +703,7 @@ document.addEventListener("DOMContentLoaded", () => {
   Chart.defaults.color = C.text;
   Chart.defaults.borderColor = C.grid;
   Chart.defaults.plugins.tooltip = tooltipBase();
+  Chart.register(guideLinePlugin);
   loadSheet().catch((e) => console.error(e));
   // Revalida a cada 10 min enquanto a aba ficar aberta
   setInterval(() => loadSheet().catch(() => {}), 10 * 60 * 1000);
