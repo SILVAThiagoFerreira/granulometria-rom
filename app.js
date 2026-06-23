@@ -251,11 +251,8 @@ function metricVals(data, pct) {
 function render() {
   const data = filtered();
   renderKpis(data);
-  renderPercentileTable(data);
   renderCurve(data);
   renderTrendAll(data);
-  renderAllDist(data);
-  renderAllBench(data);
   updateActiveFilters();
 }
 
@@ -309,37 +306,6 @@ function renderKpis(data) {
   document.getElementById("kpi-conf-hint").textContent = `${fmtInt(conf)} de ${fmtInt(d80s.length)} dentro da meta`;
   document.getElementById("kpi-mass").textContent = fmtNum(mass / 1000, 0) + " kt";
   document.getElementById("kpi-mass-hint").textContent = fmtInt(mass) + " t desmontadas";
-}
-
-function renderPercentileTable(data) {
-  const pcts = availablePercentiles(data);
-  if (!pcts.length) {
-    document.getElementById("percentile-table").innerHTML = "<p style='padding:12px;color:#6c747b'>Sem dados de curva granulometrica.</p>";
-    return;
-  }
-
-  let html = `<table class="pct-table"><thead><tr>
-    <th>Percentil</th><th>Media</th><th>Min</th><th>Max</th>
-  </tr></thead><tbody>`;
-
-  for (const pct of pcts) {
-    const vals = metricVals(data, pct);
-    if (!vals.length) continue;
-    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-    const min = Math.min(...vals);
-    const max = Math.max(...vals);
-    const tag = "P" + pct;
-    const cls = pct === 80 ? (avg <= META_D80 ? "pct-ok" : "pct-warn") : "";
-    html += `<tr>
-      <td class="${cls}">${tag}</td>
-      <td>${fmtNum(avg, 1)} mm</td>
-      <td>${fmtNum(min, 1)} mm</td>
-      <td>${fmtNum(max, 1)} mm</td>
-    </tr>`;
-  }
-
-  html += "</tbody></table>";
-  document.getElementById("percentile-table").innerHTML = html;
 }
 
 function renderCurve(data) {
@@ -450,125 +416,6 @@ function renderTrendAll(data) {
       },
     }),
   });
-}
-
-function renderAllDist(data) {
-  const pcts = availablePercentiles(data);
-  const container = document.getElementById("dist-charts");
-  container.innerHTML = "";
-
-  for (const pct of pcts) {
-    const vals = metricVals(data, pct);
-    const tag = "P" + pct;
-    const canvasId = "dist-" + pct;
-
-    const wrap = document.createElement("div");
-    wrap.className = "mini-chart";
-    wrap.innerHTML = `<p class="mini-chart__title">${tag}</p><div class="mini-chart__canvas"><canvas id="${canvasId}"></canvas></div>`;
-    container.appendChild(wrap);
-
-    const buckets = adaptiveBins(vals);
-    const counts = buckets.map((b, i) =>
-      vals.filter((v) => v >= b.lo && (i === buckets.length - 1 ? v <= b.hi : v < b.hi)).length
-    );
-
-    buildChart(canvasId, "bar", {
-      type: "bar",
-      data: {
-        labels: buckets.map((b) => b.label),
-        datasets: [{
-          label: "Desmontes",
-          data: counts,
-          backgroundColor: C.green,
-          hoverBackgroundColor: "#2b333a",
-          borderRadius: 2,
-          maxBarThickness: 28,
-        }],
-      },
-      options: {
-        ...barOpts("N"),
-        plugins: {
-          legend: { display: false },
-          tooltip: tooltipBase(),
-        },
-      },
-    });
-  }
-}
-
-function adaptiveBins(vals) {
-  if (!vals.length) return [{ lo: 0, hi: 1, label: "-" }];
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
-  const n = 5;
-  const raw = (max - min) / n || 1;
-  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
-  const base = raw / pow;
-  const nice = (base <= 1 ? 1 : base <= 2 ? 2 : base <= 5 ? 5 : 10) * pow;
-  const lo = Math.floor(min / nice) * nice;
-  const bins = [];
-  for (let i = 0; i <= n; i++) {
-    const a = lo + i * nice;
-    bins.push({ lo: a, hi: a + nice, label: fmtNum(a, 0) + "-" + fmtNum(a + nice, 0) });
-  }
-  return bins;
-}
-
-function renderAllBench(data) {
-  const pcts = availablePercentiles(data);
-  const container = document.getElementById("bench-charts");
-  container.innerHTML = "";
-
-  for (const pct of pcts) {
-    const tag = "P" + pct;
-    const canvasId = "bench-" + pct;
-    const groups = {};
-    data.forEach((r) => {
-      if (r.banco == null) return;
-      const v = r.curve[pct];
-      if (v == null) return;
-      (groups[r.banco] = groups[r.banco] || []).push(v);
-    });
-    const entries = Object.entries(groups)
-      .map(([b, arr]) => ({ b: +b, mean: arr.reduce((a, c) => a + c, 0) / arr.length }))
-      .sort((a, b) => a.b - b.b);
-
-    const wrap = document.createElement("div");
-    wrap.className = "mini-chart";
-    wrap.innerHTML = `<p class="mini-chart__title">${tag}</p><div class="mini-chart__canvas"><canvas id="${canvasId}"></canvas></div>`;
-    container.appendChild(wrap);
-
-    buildChart(canvasId, "bar", {
-      type: "bar",
-      data: {
-        labels: entries.map((e) => "Bco " + fmtInt(e.b)),
-        datasets: [{
-          label: tag + " medio (mm)",
-          data: entries.map((e) => e.mean),
-          backgroundColor: entries.map((e) => (pct === 80 && e.mean > META_D80 ? C.neutral : C.green)),
-          hoverBackgroundColor: "#2b333a",
-          borderRadius: 2,
-        }],
-      },
-      options: {
-        indexAxis: "y",
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: "nearest", intersect: true },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            ...tooltipBase(),
-            callbacks: { label: (it) => `${tag}: ${fmtNum(it.parsed.x, 0)} mm` },
-          },
-        },
-        scales: {
-          x: scaleY(tag + " (mm)"),
-          y: { ...scaleTicks(), grid: { display: false } },
-        },
-      },
-    });
-  }
 }
 
 function buildChart(canvasId, _kind, config) {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Granulometria ROM · US Vale Verde</title>
   <link rel="preconnect" href="https://docs.google.com">
-  <link rel="stylesheet" href="./styles.css?v=3">
+  <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
   <header class="topbar">
@@ -32,7 +32,7 @@
 
     <div class="active-filters" id="active-filters" style="display:none"></div>
 
-    <section class="kpis" id="kpis">
+    <section class="kpis">
       <div class="kpi">
         <p class="kpi__label">Desmontes</p>
         <p class="kpi__value" id="kpi-count">--</p>
@@ -55,37 +55,20 @@
       </div>
     </section>
 
-    <div id="percentile-table-wrap" class="section-block">
-      <h3 class="section-title">Resumo por percentil</h3>
-      <div id="percentile-table" style="overflow-x:auto"></div>
+    <div class="chart-tile">
+      <h3 class="chart-label">Curva granulometrica media</h3>
+      <div class="chart-box"><canvas id="chart-curve"></canvas></div>
     </div>
 
-    <div class="chart-grid">
-      <div class="chart-tile chart-tile--wide">
-        <h3 class="chart-label">Curva granulometrica media</h3>
-        <div class="chart-box"><canvas id="chart-curve"></canvas></div>
-      </div>
-
-      <div class="chart-tile chart-tile--wide">
-        <h3 class="chart-label">Evolucao mensal</h3>
-        <div class="chart-box chart-box--tall"><canvas id="chart-trend-all"></canvas></div>
-      </div>
-
-      <div class="chart-tile chart-tile--wide">
-        <h3 class="chart-label">Distribuicao por percentil</h3>
-        <div id="dist-charts" class="mini-chart-grid"></div>
-      </div>
-
-      <div class="chart-tile chart-tile--wide">
-        <h3 class="chart-label">Media por banco</h3>
-        <div id="bench-charts" class="mini-chart-grid"></div>
-      </div>
+    <div class="chart-tile" style="margin-top:10px">
+      <h3 class="chart-label">Evolucao mensal — todos os percentis</h3>
+      <div class="chart-box chart-box--tall"><canvas id="chart-trend-all"></canvas></div>
     </div>
 
     <p class="source-note">Fonte: Planilha Google Sheets da operacao US Vale Verde</p>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="./app.js?v=3"></script>
+  <script src="./app.js?v=4"></script>
 </body>
 </html>

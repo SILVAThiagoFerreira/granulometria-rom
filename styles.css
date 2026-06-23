@@ -1,5 +1,5 @@
 /* ============================================================
-   Granulometria ROM — Estilo consultoria / Power BI clean
+   Granulometria ROM — Consultoria clean
    ============================================================ */
 
 :root {
@@ -12,7 +12,6 @@
   --faint: #b2bec3;
   --rule: #e8ecef;
   --rule-soft: #f1f3f5;
-  --accent: #2d3436;
   --font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -41,26 +40,17 @@ body {
 .topbar__left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
-.topbar__logo {
-  height: 18px;
-  width: auto;
-  opacity: 0.85;
-}
+.topbar__logo { height: 18px; width: auto; opacity: 0.85; }
 .topbar__title {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-  letter-spacing: -0.01em;
 }
 
 /* ---------- Filters ---------- */
-.filters {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.filters { display: flex; align-items: center; gap: 6px; }
 .filter-select {
   appearance: none;
   font-family: var(--font);
@@ -70,9 +60,8 @@ body {
   border: 1px solid var(--rule);
   border-radius: 4px;
   padding: 5px 26px 5px 9px;
-  min-width: 90px;
+  min-width: 88px;
   cursor: pointer;
-  transition: border-color 120ms;
 }
 .filter-select:focus { outline: none; border-color: var(--ink); }
 .filter-reset {
@@ -84,7 +73,6 @@ body {
   border-radius: 4px;
   padding: 5px 10px;
   cursor: pointer;
-  transition: color 120ms, border-color 120ms;
 }
 .filter-reset:hover { color: var(--ink); border-color: var(--ink); }
 
@@ -97,10 +85,7 @@ body {
   font-size: 11px;
   color: var(--muted);
 }
-.status__dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--faint);
-}
+.status__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
 .status.is-loading .status__dot { background: var(--ink); animation: pulse 1.1s infinite; }
 .status.is-ok .status__dot { background: var(--ink); }
 .status.is-error .status__dot { background: #d63031; }
@@ -111,18 +96,13 @@ body {
 
 /* ---------- Page ---------- */
 .page {
-  width: min(1280px, calc(100% - 40px));
+  width: min(1100px, calc(100% - 40px));
   margin: 0 auto;
   padding: 0 0 40px;
 }
 
 /* ---------- Active filter chips ---------- */
-.active-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 10px;
-}
+.active-filters { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 .chip {
   display: inline-flex;
   align-items: center;
@@ -135,10 +115,9 @@ body {
   border-radius: 999px;
   padding: 3px 5px 3px 9px;
   cursor: pointer;
-  transition: border-color 120ms;
 }
 .chip:hover { border-color: var(--ink); }
-.chip__k { color: var(--muted); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.chip__k { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
 .chip__v { font-weight: 600; }
 .chip__x {
   display: inline-flex;
@@ -149,7 +128,6 @@ body {
   background: var(--rule);
   color: var(--ink);
   font-size: 11px;
-  line-height: 1;
 }
 .chip:hover .chip__x { background: var(--ink); color: #fff; }
 
@@ -158,7 +136,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 .kpi {
   padding: 14px 16px;
@@ -168,116 +146,33 @@ body {
 .kpi__label {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+  letter-spacing: 0.06em;
   margin-bottom: 6px;
 }
 .kpi__value {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
-.kpi__sub {
-  margin-top: 5px;
-  font-size: 10.5px;
-  color: var(--faint);
-}
+.kpi__sub { margin-top: 4px; font-size: 10.5px; color: var(--faint); }
 
-/* ---------- Section block ---------- */
-.section-block {
-  background: var(--surface);
-  padding: 16px;
-  margin-bottom: 12px;
-}
-.section-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 10px;
-  letter-spacing: -0.01em;
-}
-
-/* ---------- Chart grid ---------- */
-.chart-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
+/* ---------- Chart tile ---------- */
 .chart-tile {
   background: var(--surface);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
+  padding: 18px 20px 14px;
 }
-.chart-tile--wide { grid-column: 1 / -1; }
 .chart-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--ink);
   margin-bottom: 10px;
-  letter-spacing: -0.01em;
 }
-.chart-box { position: relative; flex: 1; min-height: 200px; }
-.chart-box--tall { min-height: 260px; }
-
-/* ---------- Mini chart grid ---------- */
-.mini-chart-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
-}
-.mini-chart {
-  padding: 10px 12px 6px;
-  background: var(--surface-alt);
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  min-height: 160px;
-}
-.mini-chart__title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 4px;
-}
-.mini-chart__canvas {
-  position: relative;
-  flex: 1;
-  min-height: 100px;
-}
-
-/* ---------- Percentile table ---------- */
-.pct-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11.5px;
-}
-.pct-table th,
-.pct-table td {
-  padding: 7px 10px;
-  text-align: right;
-  border-bottom: 1px solid var(--rule-soft);
-}
-.pct-table th {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-align: right;
-  border-bottom: 1px solid var(--rule);
-}
-.pct-table th:first-child,
-.pct-table td:first-child {
-  text-align: left;
-  font-weight: 600;
-}
-.pct-table tbody tr:hover { background: var(--surface-alt); }
-.pct-table .pct-ok { color: var(--ink); }
-.pct-table .pct-warn { color: #d63031; }
+.chart-box { position: relative; min-height: 220px; }
+.chart-box--tall { min-height: 280px; }
 
 /* ---------- Source note ---------- */
 .source-note {
@@ -289,8 +184,6 @@ body {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 980px) {
-  .chart-grid { grid-template-columns: 1fr; }
-  .chart-tile--wide { grid-column: auto; }
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .topbar { flex-direction: column; gap: 8px; align-items: flex-start; }
   .filters { flex-wrap: wrap; }
