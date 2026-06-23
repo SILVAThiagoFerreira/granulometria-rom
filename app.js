@@ -9,15 +9,15 @@ const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx
 const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 const META_D80 = 400; // mm — meta de D80 da operação
 
-// ---------- Paleta oficial Enaex/MTi ----------
+// ---------- Paleta Enaex (cinza + vermelho sobre branco) ----------
 const C = {
-  green: "#3F650F",        // Verde Escuro MTi (dados conformes)
-  greenFill: "rgba(118,189,34,0.14)",
-  neutral: "#E20613",      // Vermelho Enaex (não-conforme / acima da meta)
-  meta: "#868685",         // Cinza MTi (linha de meta)
+  green: "#38424B",        // conforme / dados (Cinza Enaex)
+  greenFill: "rgba(56,66,75,0.09)",
+  neutral: "#E20613",      // não-conforme / acima da meta (Vermelho Enaex)
+  meta: "#aab0b6",         // linha de meta (cinza claro)
   grid: "rgba(56,66,75,0.10)",
-  text: "#868685",         // Cinza MTi
-  ink: "#38424B",          // Cinza Enaex
+  text: "#6c747b",
+  ink: "#38424B",
 };
 
 // Percentis da curva granulométrica na ordem esperada
@@ -402,17 +402,30 @@ function renderBench(data) {
         label: "D80 médio (mm)",
         data: entries.map((e) => e.mean),
         backgroundColor: entries.map((e) => (e.mean <= META_D80 ? C.green : C.neutral)),
-        borderRadius: 6,
+        hoverBackgroundColor: entries.map((e) => (e.mean <= META_D80 ? "#2b333a" : "#b80510")),
+        borderRadius: 3,
       }],
     },
     options: {
       indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { mode: "nearest", intersect: true },
+      onClick: (_evt, els) => {
+        if (!els.length) return;
+        const e = entries[els[0].index];
+        const sel = document.getElementById("filter-bench");
+        sel.value = String(e.b);
+        render();
+      },
+      onHover: (evt, els) => {
+        if (evt.native && evt.native.target) {
+          evt.native.target.style.cursor = els.length ? "pointer" : "default";
+        }
+      },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (it) => `D80 médio: ${fmtNum(it.parsed.x, 0)} mm` } },
-        annotation: false,
+        tooltip: { callbacks: { label: (it) => `D80 médio: ${fmtNum(it.parsed.x, 0)} mm · clique para filtrar` } },
       },
       scales: {
         x: scaleY("D80 médio (mm)"),
@@ -454,6 +467,7 @@ function renderTrend(data) {
         pointBorderColor: C.green,
         pointBorderWidth: 1.5,
         pointRadius: 3,
+        pointHoverRadius: 6,
         tension: 0.3,
         fill: true,
       }, {
@@ -473,6 +487,22 @@ function renderTrend(data) {
       },
     }),
   });
+  // clique no ponto → filtra por ano + mês
+  const tc = CHARTS["chart-trend"];
+  if (tc) {
+    tc.options.onClick = (_evt, els) => {
+      if (!els.length) return;
+      const k = keys[els[0].index].split("-");
+      document.getElementById("filter-year").value = k[0];
+      document.getElementById("filter-month").value = String(+k[1]);
+      render();
+    };
+    tc.options.onHover = (evt, els) => {
+      if (evt.native && evt.native.target) {
+        evt.native.target.style.cursor = els.length ? "pointer" : "default";
+      }
+    };
+  }
 }
 
 // ---------- Helpers de gráfico ----------
@@ -499,6 +529,8 @@ function baseOpts() {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    hover: { mode: "index", intersect: false },
     plugins: {
       legend: { display: false },
       tooltip: tooltipBase(),

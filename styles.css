@@ -1,28 +1,23 @@
 /* ============================================================
    Granulometria ROM — Power BI / consultoria
-   Fundo branco · hairlines · paleta Enaex/MTi
-   Cinza Enaex #38424B · Vermelho #E20613 · Verde MTi #76BD22
-   Verde Escuro #3F650F · Cinza MTi #868685 · Verde texto #2A4F1D
+   Paleta: variações de branco + Cinza Enaex #38424B + Vermelho #E20613
    ============================================================ */
 
 :root {
   --bg: #ffffff;
   --surface: #ffffff;
-  --surface-alt: #fbfbfc;
+  --surface-alt: #fafbfc;
 
   --ink: #38424B;          /* Cinza Enaex — texto principal */
-  --ink-2: #4a545d;
-  --muted: #868685;        /* Cinza MTi */
-  --faint: #b6babd;
+  --ink-2: #4c555d;
+  --muted: #6c747b;
+  --faint: #9aa1a7;
 
-  --rule: #e4e6e9;         /* hairline */
-  --rule-soft: #eef0f2;
+  --rule: #e6e8ea;         /* hairline (variação de branco) */
+  --rule-soft: #f0f1f3;
 
-  --green: #3F650F;        /* Verde Escuro MTi (dados) */
-  --green-bright: #76BD22; /* Verde MTi (acento) */
-  --green-text: #2A4F1D;   /* verde escuro texto */
-  --green-fill: rgba(118, 189, 34, 0.14);
-  --red: #E20613;          /* Vermelho Enaex (não-conforme) */
+  --gray: #38424B;
+  --red: #E20613;          /* Vermelho Enaex — acento */
 
   --radius: 3px;
   --font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, Aptos, sans-serif;
@@ -83,7 +78,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--green);
+  color: var(--red);
 }
 .page-head h1 {
   margin: 0;
@@ -119,14 +114,14 @@ body {
   font-family: var(--font);
   font-size: 12.5px;
   color: var(--ink);
-  background: var(--surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23868685' d='M5 6 0 0h10z'/></svg>") no-repeat right 11px center;
+  background: var(--surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%236c747b' d='M5 6 0 0h10z'/></svg>") no-repeat right 11px center;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 7px 30px 7px 11px;
   min-width: 112px;
   cursor: pointer;
 }
-.filter select:focus { outline: none; border-color: var(--green-bright); }
+.filter select:focus { outline: none; border-color: var(--red); }
 .filter--wide select { min-width: 176px; }
 .filter-reset {
   align-self: flex-end;
@@ -140,7 +135,7 @@ body {
   cursor: pointer;
   transition: color 120ms ease, border-color 120ms ease;
 }
-.filter-reset:hover { color: var(--green); border-color: var(--green-bright); }
+.filter-reset:hover { color: var(--red); border-color: var(--red); }
 
 /* ---------- Status ---------- */
 .status {
@@ -155,8 +150,8 @@ body {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--faint);
 }
-.status.is-loading .status__dot { background: var(--green-bright); animation: pulse 1.1s infinite; }
-.status.is-ok .status__dot { background: var(--green-bright); }
+.status.is-loading .status__dot { background: var(--gray); animation: pulse 1.1s infinite; }
+.status.is-ok .status__dot { background: var(--gray); }
 .status.is-error .status__dot { background: var(--red); }
 .status.is-error { color: var(--red); }
 .status__spacer { flex: 1; }
@@ -182,7 +177,7 @@ body {
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 3px;
-  background: var(--green-bright);
+  background: var(--red);
 }
 .kpi__label {
   margin: 0 0 8px;
