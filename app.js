@@ -79,7 +79,7 @@ async function loadSheet() {
       if (!res.ok) throw new Error("csv HTTP " + res.status);
       table = parseCsv(await res.text());
     } catch (e2) {
-      setStatus("error", "Nao foi possivel acessar a planilha. Verifique se o link esta publico.");
+      setStatus("error", "Não foi possível acessar a planilha. Verifique se o link está público.");
       throw e2;
     }
   }
@@ -252,13 +252,16 @@ function render() {
   const data = filtered();
   renderKpis(data);
   renderCurve(data);
-  renderTrendAll(data);
+  renderHist(data);
+  renderD80(data);
+  renderBench(data);
+  renderTrend(data);
   updateActiveFilters();
 }
 
 const FILTER_DEFS = [
   { id: "filter-year", label: "Ano" },
-  { id: "filter-month", label: "Mes", name: (v) => meses[+v - 1] },
+  { id: "filter-month", label: "Mês", name: (v) => meses[+v - 1] },
   { id: "filter-bench", label: "Banco", name: (v) => "Bco " + fmtInt(+v) },
   { id: "filter-plan", label: "Plano" },
 ];
@@ -274,7 +277,7 @@ function updateActiveFilters() {
       chips.push(
         `<button class="chip" data-id="${f.id}" type="button">` +
         `<span class="chip__k">${f.label}:</span> <span class="chip__v">${escapeText(display)}</span>` +
-        `<span class="chip__x" aria-hidden="true">&times;</span></button>`
+        `<span class="chip__x" aria-hidden="true">×</span></button>`
       );
     }
   });
@@ -302,7 +305,7 @@ function renderKpis(data) {
   const confPct = d80s.length ? (conf / d80s.length) * 100 : 0;
   const confEl = document.getElementById("kpi-conf");
   confEl.textContent = fmtNum(confPct, 0) + "%";
-  confEl.style.color = "";
+  confEl.style.color = confPct >= 70 ? C.green : C.neutral;
   document.getElementById("kpi-conf-hint").textContent = `${fmtInt(conf)} de ${fmtInt(d80s.length)} dentro da meta`;
   document.getElementById("kpi-mass").textContent = fmtNum(mass / 1000, 0) + " kt";
   document.getElementById("kpi-mass-hint").textContent = fmtInt(mass) + " t desmontadas";
@@ -321,7 +324,7 @@ function renderCurve(data) {
     data: {
       labels,
       datasets: [{
-        label: "Abertura media (mm)",
+        label: "Abertura média (mm)",
         data: means,
         borderColor: C.green,
         backgroundColor: C.greenFill,
@@ -359,63 +362,226 @@ function pickCurvePoints(data, minCount) {
     .sort((a, b) => a.pct - b.pct);
 }
 
-const LINE_COLORS = [
-  "#38424B", "#E20613", "#5a6670", "#c4302b",
-  "#7a868f", "#ff6b6b", "#2c3e50", "#e74c3c",
-  "#95a5a6", "#d35400", "#bdc3c7", "#2980b9",
-  "#1abc9c",
-];
+function renderHist(data) {
+  const vals = data.map((r) => r.d80).filter((v) => v != null);
+  const buckets = [
+    { lo: 0, hi: 200, label: "0–200" },
+    { lo: 200, hi: 300, label: "200–300" },
+    { lo: 300, hi: 400, label: "300–400" },
+    { lo: 400, hi: 500, label: "400–500" },
+    { lo: 500, hi: 700, label: "500–700" },
+    { lo: 700, hi: Infinity, label: "700+" },
+  ];
+  const counts = buckets.map((b) =>
+    vals.filter((v) => v >= b.lo && v < b.hi).length
+  );
+  const colors = buckets.map((b) => (b.hi <= META_D80 + 1 ? C.green : C.neutral));
+  const hover = buckets.map((b) => (b.hi <= META_D80 + 1 ? "#2b333a" : "#b80510"));
 
-function renderTrendAll(data) {
-  const pcts = availablePercentiles(data);
+  buildChart("chart-hist", "bar", {
+    type: "bar",
+    data: {
+      labels: buckets.map((b) => b.label),
+      datasets: [{
+        label: "Desmontes",
+        data: counts,
+        backgroundColor: colors,
+        hoverBackgroundColor: hover,
+        borderRadius: 3,
+        maxBarThickness: 56,
+      }],
+    },
+    options: barOpts("Nº de desmontes"),
+  });
+}
+
+function renderD80(data) {
+  const ordered = [...data].sort((a, b) => sortDate(a, b));
+  const labels = ordered.map((r) => labelRec(r));
+  const values = ordered.map((r) => r.d80);
+  const colors = values.map((v) => (v != null && v <= META_D80 ? C.green : C.neutral));
+
+  buildChart("chart-d80", "bar", {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: "bar",
+          label: "D80 (mm)",
+          data: values,
+          backgroundColor: colors,
+          hoverBackgroundColor: values.map((v) => (v != null && v <= META_D80 ? "#2b333a" : "#b80510")),
+          order: 2,
+        },
+        {
+          type: "line",
+          label: "Meta 400 mm",
+          data: values.map(() => META_D80),
+          borderColor: C.meta,
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 0,
+          fill: false,
+          order: 1,
+        },
+      ],
+    },
+    options: barOpts("D80 (mm)", {
+      plugins: {
+        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const r = ordered[items[0].dataIndex];
+              return "Plano " + (r.poligonal || "—");
+            },
+            label: (it) => {
+              if (it.dataset.type === "line") return "Meta: " + fmtNum(it.parsed.y, 0) + " mm";
+              const r = ordered[it.dataIndex];
+              const status = r.d80 != null ? (r.d80 <= META_D80 ? "✓ dentro da meta" : "✗ acima da meta") : null;
+              return [`D80: ${r.d80 != null ? fmtNum(r.d80, 1) : "—"} mm`, `Banco: ${r.banco != null ? fmtInt(r.banco) : "—"}`, status].filter(Boolean);
+            },
+          },
+        },
+      },
+      scales: {
+        x: scaleTicks(),
+        y: scaleY("D80 (mm)"),
+      },
+    }),
+  });
+  const dc = CHARTS["chart-d80"];
+  if (dc) {
+    dc.options.onClick = (_evt, els) => {
+      if (!els.length) return;
+      const r = ordered[els[0].index];
+      const sel = document.getElementById("filter-plan");
+      sel.value = String(r.poligonal);
+      render();
+    };
+    dc.options.onHover = (evt, els) => {
+      if (evt.native && evt.native.target) evt.native.target.style.cursor = els.length ? "pointer" : "default";
+    };
+  }
+}
+
+function renderBench(data) {
+  const groups = {};
+  data.forEach((r) => {
+    if (r.banco == null) return;
+    (groups[r.banco] = groups[r.banco] || []).push(r.d80);
+  });
+  const entries = Object.entries(groups)
+    .map(([b, arr]) => ({ b: +b, mean: arr.reduce((a, c) => a + c, 0) / arr.length, n: arr.length }))
+    .sort((a, b) => a.b - b.b);
+
+  buildChart("chart-bench", "bar", {
+    type: "bar",
+    data: {
+      labels: entries.map((e) => "Bco " + fmtInt(e.b)),
+      datasets: [{
+        label: "D80 médio (mm)",
+        data: entries.map((e) => e.mean),
+        backgroundColor: entries.map((e) => (e.mean <= META_D80 ? C.green : C.neutral)),
+        hoverBackgroundColor: entries.map((e) => (e.mean <= META_D80 ? "#2b333a" : "#b80510")),
+        borderRadius: 3,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "nearest", intersect: true },
+      onClick: (_evt, els) => {
+        if (!els.length) return;
+        const e = entries[els[0].index];
+        const sel = document.getElementById("filter-bench");
+        sel.value = String(e.b);
+        render();
+      },
+      onHover: (evt, els) => {
+        if (evt.native && evt.native.target) {
+          evt.native.target.style.cursor = els.length ? "pointer" : "default";
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (it) => `D80 médio: ${fmtNum(it.parsed.x, 0)} mm · clique para filtrar` } },
+      },
+      scales: {
+        x: scaleY("D80 médio (mm)"),
+        y: { ...scaleTicks(), grid: { display: false } },
+      },
+    },
+  });
+}
+
+function renderTrend(data) {
   const groups = {};
   data.forEach((r) => {
     if (!r.ano || !r.mes) return;
     const k = r.ano + "-" + String(r.mes).padStart(2, "0");
-    if (!groups[k]) groups[k] = {};
-    for (const pct of pcts) {
-      const v = r.curve[pct];
-      if (v != null) {
-        if (!groups[k][pct]) groups[k][pct] = [];
-        groups[k][pct].push(v);
-      }
-    }
+    (groups[k] = groups[k] || []).push(r.d80);
   });
   const keys = Object.keys(groups).sort();
+  const means = keys.map((k) => {
+    const arr = groups[k];
+    return arr.reduce((a, c) => a + c, 0) / arr.length;
+  });
   const labels = keys.map((k) => {
     const [y, m] = k.split("-");
     return meses[+m - 1] + "/" + y.slice(2);
   });
 
-  const datasets = pcts.map((pct, ci) => ({
-    label: "P" + pct,
-    data: keys.map((k) => {
-      const arr = groups[k][pct];
-      return arr ? arr.reduce((a, c) => a + c, 0) / arr.length : null;
-    }),
-    borderColor: LINE_COLORS[ci % LINE_COLORS.length],
-    backgroundColor: "transparent",
-    borderWidth: pct === 80 ? 2.5 : 1.5,
-    borderDash: pct === 80 ? [] : [4, 3],
-    pointRadius: pct === 80 ? 3 : 1.5,
-    pointHoverRadius: 5,
-    tension: 0.3,
-    fill: false,
-  }));
-
-  buildChart("chart-trend-all", "line", {
+  buildChart("chart-trend", "line", {
     type: "line",
-    data: { labels, datasets },
-    options: lineOpts("Media mensal (mm)", {
+    data: {
+      labels,
+      datasets: [{
+        label: "D80 médio mensal (mm)",
+        data: means,
+        borderColor: C.green,
+        backgroundColor: C.greenFill,
+        borderWidth: 2,
+        pointBackgroundColor: "#ffffff",
+        pointBorderColor: C.green,
+        pointBorderWidth: 1.5,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        fill: true,
+      }, {
+        type: "line",
+        label: "Meta 400 mm",
+        data: labels.map(() => META_D80),
+        borderColor: C.meta,
+        borderWidth: 1.5,
+        borderDash: [5, 4],
+        pointRadius: 0,
+        fill: false,
+      }],
+    },
+    options: lineOpts("D80 médio (mm)", {
       plugins: {
-        legend: {
-          display: true,
-          position: "bottom",
-          labels: { color: C.text, boxWidth: 14, font: { size: 10 } },
-        },
+        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
       },
     }),
   });
+  const tc = CHARTS["chart-trend"];
+  if (tc) {
+    tc.options.onClick = (_evt, els) => {
+      if (!els.length) return;
+      const k = keys[els[0].index].split("-");
+      document.getElementById("filter-year").value = k[0];
+      document.getElementById("filter-month").value = String(+k[1]);
+      render();
+    };
+    tc.options.onHover = (evt, els) => {
+      if (evt.native && evt.native.target) {
+        evt.native.target.style.cursor = els.length ? "pointer" : "default";
+      }
+    };
+  }
 }
 
 function buildChart(canvasId, _kind, config) {
@@ -433,7 +599,7 @@ function sortDate(a, b) {
   return ka - kb;
 }
 function labelRec(r) {
-  const p = r.poligonal ? String(r.poligonal).slice(0, 6) : "-";
+  const p = r.poligonal ? String(r.poligonal).slice(0, 6) : "—";
   return p;
 }
 
@@ -516,7 +682,7 @@ function nowBR() {
 
 document.addEventListener("DOMContentLoaded", () => {
   if (!window.Chart) {
-    setStatus("error", "Biblioteca de graficos (Chart.js) nao carregou. Verifique sua conexao.");
+    setStatus("error", "Biblioteca de gráficos (Chart.js) não carregou. Verifique sua conexão.");
     return;
   }
   Chart.defaults.font.family = "'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";

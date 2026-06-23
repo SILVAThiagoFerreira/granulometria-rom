@@ -4,71 +4,120 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Granulometria ROM · US Vale Verde</title>
+  <meta name="description" content="Granulometria do material desmontado (ROM) — US Vale Verde.">
   <link rel="preconnect" href="https://docs.google.com">
-  <link rel="stylesheet" href="./styles.css?v=4">
+  <link rel="stylesheet" href="./styles.css?v=5">
 </head>
 <body>
   <header class="topbar">
-    <div class="topbar__left">
-      <img class="topbar__logo" src="./assets/openblast-logo.png" alt="OpenBlast">
-      <span class="topbar__title">Granulometria ROM</span>
-    </div>
-    <div class="filters">
-      <select id="filter-year" class="filter-select"><option value="">Ano</option></select>
-      <select id="filter-month" class="filter-select"><option value="">Mes</option></select>
-      <select id="filter-bench" class="filter-select"><option value="">Banco</option></select>
-      <select id="filter-plan" class="filter-select"><option value="">Plano</option></select>
-      <button id="filter-reset" type="button" class="filter-reset">Limpar</button>
-    </div>
+    <img class="topbar__logo" src="./assets/openblast-logo.png" alt="OpenBlast">
+    <span class="topbar__unit">US VALE VERDE</span>
   </header>
 
   <main class="page">
+    <section class="page-head">
+      <div class="page-head__title">
+        <p class="eyebrow">GRANULOMETRIA · ROM</p>
+        <h1>Material Desmontado</h1>
+      </div>
+      <div class="filters">
+        <label class="filter">
+          <span>ANO</span>
+          <select id="filter-year"></select>
+        </label>
+        <label class="filter">
+          <span>MÊS</span>
+          <select id="filter-month"></select>
+        </label>
+        <label class="filter">
+          <span>BANCO</span>
+          <select id="filter-bench"></select>
+        </label>
+        <label class="filter filter--wide">
+          <span>PLANO</span>
+          <select id="filter-plan"></select>
+        </label>
+        <button id="filter-reset" type="button" class="filter-reset">Limpar</button>
+      </div>
+    </section>
+
     <p class="status" id="status" aria-live="polite">
       <span class="status__dot" id="status-dot"></span>
-      <span id="status-text">Carregando...</span>
+      <span id="status-text">Carregando…</span>
       <span class="status__spacer"></span>
       <span class="status__time" id="last-update"></span>
     </p>
 
     <div class="active-filters" id="active-filters" style="display:none"></div>
 
-    <section class="kpis">
+    <section class="kpis" id="kpis">
       <div class="kpi">
-        <p class="kpi__label">Desmontes</p>
-        <p class="kpi__value" id="kpi-count">--</p>
+        <p class="kpi__label">DESMONTES</p>
+        <p class="kpi__value" id="kpi-count">—</p>
         <p class="kpi__sub" id="kpi-count-hint">&nbsp;</p>
       </div>
       <div class="kpi">
-        <p class="kpi__label">D80 medio</p>
-        <p class="kpi__value" id="kpi-d80">--</p>
-        <p class="kpi__sub">Meta &le; 400 mm</p>
+        <p class="kpi__label">D80 MÉDIO</p>
+        <p class="kpi__value" id="kpi-d80">—</p>
+        <p class="kpi__sub">Meta ≤ 400 mm</p>
       </div>
       <div class="kpi">
-        <p class="kpi__label">Conformidade</p>
-        <p class="kpi__value" id="kpi-conf">--</p>
-        <p class="kpi__sub" id="kpi-conf-hint">--</p>
+        <p class="kpi__label">CONFORMIDADE D80</p>
+        <p class="kpi__value" id="kpi-conf">—</p>
+        <p class="kpi__sub" id="kpi-conf-hint">—</p>
       </div>
       <div class="kpi">
-        <p class="kpi__label">Massa</p>
-        <p class="kpi__value" id="kpi-mass">--</p>
-        <p class="kpi__sub" id="kpi-mass-hint">--</p>
+        <p class="kpi__label">MASSA DESMONTADA</p>
+        <p class="kpi__value" id="kpi-mass">—</p>
+        <p class="kpi__sub" id="kpi-mass-hint">—</p>
       </div>
     </section>
 
-    <div class="chart-tile">
-      <h3 class="chart-label">Curva granulometrica media</h3>
-      <div class="chart-box"><canvas id="chart-curve"></canvas></div>
-    </div>
+    <section class="chart-stack">
+      <div class="chart-block">
+        <div class="chart-block__head">
+          <h2>Curva granulométrica média</h2>
+          <p>% passante por abertura</p>
+        </div>
+        <div class="chart-block__body"><canvas id="chart-curve"></canvas></div>
+      </div>
 
-    <div class="chart-tile" style="margin-top:10px">
-      <h3 class="chart-label">Evolucao mensal — todos os percentis</h3>
-      <div class="chart-box chart-box--tall"><canvas id="chart-trend-all"></canvas></div>
-    </div>
+      <div class="chart-block">
+        <div class="chart-block__head">
+          <h2 id="title-dist">Distribuição D80</h2>
+          <p>Desmontes por faixa (mm)</p>
+        </div>
+        <div class="chart-block__body"><canvas id="chart-hist"></canvas></div>
+      </div>
 
-    <p class="source-note">Fonte: Planilha Google Sheets da operacao US Vale Verde</p>
+      <div class="chart-block">
+        <div class="chart-block__head">
+          <h2 id="title-peritem">D80 por desmonte</h2>
+          <p id="sub-peritem">Linha: meta 400 mm</p>
+        </div>
+        <div class="chart-block__body chart-block__body--tall"><canvas id="chart-d80"></canvas></div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-block chart-block--half">
+          <div class="chart-block__head">
+            <h2 id="title-bench">D80 médio por banco</h2>
+            <p>Por bancada</p>
+          </div>
+          <div class="chart-block__body"><canvas id="chart-bench"></canvas></div>
+        </div>
+        <div class="chart-block chart-block--half">
+          <div class="chart-block__head">
+            <h2 id="title-trend">Evolução D80</h2>
+            <p>Média mensal</p>
+          </div>
+          <div class="chart-block__body"><canvas id="chart-trend"></canvas></div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="./app.js?v=4"></script>
+  <script src="./app.js?v=5"></script>
 </body>
 </html>
