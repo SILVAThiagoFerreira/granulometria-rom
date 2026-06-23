@@ -97,7 +97,7 @@ async function loadSheet() {
     return;
   }
   populateFilters();
-  setStatus("ok", `${RECORDS.length} desmontes carregados da planilha.`);
+  setStatus("ok", `${RECORDS.length} desmontes carregados.`);
   document.getElementById("last-update").textContent = "Atualizado em " + nowBR();
   render();
 }
