@@ -256,6 +256,7 @@ function render() {
   renderD80(data);
   renderBench(data);
   renderTrend(data);
+  renderExtraCharts(data);
   updateActiveFilters();
 }
 
@@ -581,6 +582,67 @@ function renderTrend(data) {
         evt.native.target.style.cursor = els.length ? "pointer" : "default";
       }
     };
+  }
+}
+
+function renderExtraCharts(data) {
+  const container = document.getElementById("extra-charts");
+  if (!container) return;
+  const pcts = availablePercentiles(data).filter((p) => p !== 80);
+  container.innerHTML = "";
+
+  for (const pct of pcts) {
+    const vals = metricVals(data, pct);
+    const tag = "P" + pct;
+    const canvasId = "extra-" + pct;
+
+    const card = document.createElement("div");
+    card.className = "extra-card";
+    card.innerHTML = `<p class="extra-card__title">${tag}</p><div class="extra-card__canvas"><canvas id="${canvasId}"></canvas></div>`;
+    container.appendChild(card);
+
+    if (!vals.length) continue;
+
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const n = 5;
+    const raw = (max - min) / n || 1;
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const base = raw / pow;
+    const nice = (base <= 1 ? 1 : base <= 2 ? 2 : base <= 5 ? 5 : 10) * pow;
+    const lo = Math.floor(min / nice) * nice;
+    const bins = [];
+    for (let i = 0; i <= n; i++) {
+      const a = lo + i * nice;
+      bins.push({ lo: a, hi: a + nice, label: fmtNum(a, 0) + "-" + fmtNum(a + nice, 0) });
+    }
+
+    const counts = bins.map((b, i) =>
+      vals.filter((v) => v >= b.lo && (i === bins.length - 1 ? v <= b.hi : v < b.hi)).length
+    );
+
+    buildChart(canvasId, "bar", {
+      type: "bar",
+      data: {
+        labels: bins.map((b) => b.label),
+        datasets: [{
+          data: counts,
+          backgroundColor: C.green,
+          hoverBackgroundColor: "#2b333a",
+          borderRadius: 2,
+          maxBarThickness: 32,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: tooltipBase() },
+        scales: {
+          x: { ticks: { color: C.text, font: { size: 9 } }, border: { color: C.grid } },
+          y: { ticks: { color: C.text, font: { size: 9 } }, border: { color: C.grid }, grid: { color: C.grid } },
+        },
+      },
+    });
   }
 }
 

@@ -270,6 +270,51 @@ body {
   padding: 18px 22px 14px;
 }
 
+/* ---------- Extra percentile section ---------- */
+.extra-section {
+  margin-top: 1px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 18px 22px 14px;
+}
+.extra-section__head { margin-bottom: 12px; }
+.extra-section__head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.extra-section__head p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.extra-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+.extra-card {
+  background: var(--surface);
+  padding: 12px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 170px;
+}
+.extra-card__title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.extra-card__canvas {
+  position: relative;
+  flex: 1;
+  min-height: 110px;
+}
+
 /* ---------- Source ---------- */
 .source-note {
   margin: 14px 0 0;
