@@ -305,7 +305,7 @@ function renderKpis(data) {
   const confPct = d80s.length ? (conf / d80s.length) * 100 : 0;
   const confEl = document.getElementById("kpi-conf");
   confEl.textContent = fmtNum(confPct, 0) + "%";
-  confEl.style.color = confPct >= 70 ? C.green : C.neutral;
+  confEl.style.color = "";
   document.getElementById("kpi-conf-hint").textContent = `${fmtInt(conf)} de ${fmtInt(d80s.length)} dentro da meta`;
   document.getElementById("kpi-mass").textContent = fmtNum(mass / 1000, 0) + " kt";
   document.getElementById("kpi-mass-hint").textContent = fmtInt(mass) + " t desmontadas";
@@ -319,7 +319,7 @@ function renderPercentileTable(data) {
   }
 
   let html = `<table class="pct-table"><thead><tr>
-    <th>Percentil</th><th>Media (mm)</th><th>Min (mm)</th><th>Max (mm)</th><th>Amplitude</th><th>N</th>
+    <th>Percentil</th><th>Media</th><th>Min</th><th>Max</th>
   </tr></thead><tbody>`;
 
   for (const pct of pcts) {
@@ -328,16 +328,13 @@ function renderPercentileTable(data) {
     const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
     const min = Math.min(...vals);
     const max = Math.max(...vals);
-    const amp = max - min;
     const tag = "P" + pct;
     const cls = pct === 80 ? (avg <= META_D80 ? "pct-ok" : "pct-warn") : "";
     html += `<tr>
       <td class="${cls}">${tag}</td>
-      <td>${fmtNum(avg, 1)}</td>
-      <td>${fmtNum(min, 1)}</td>
-      <td>${fmtNum(max, 1)}</td>
-      <td>${fmtNum(amp, 1)}</td>
-      <td>${fmtInt(vals.length)}</td>
+      <td>${fmtNum(avg, 1)} mm</td>
+      <td>${fmtNum(min, 1)} mm</td>
+      <td>${fmtNum(max, 1)} mm</td>
     </tr>`;
   }
 
