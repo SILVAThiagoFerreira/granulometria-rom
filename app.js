@@ -9,15 +9,15 @@ const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx
 const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 const META_D80 = 400; // mm — meta de D80 da operação
 
-// ---------- Paleta (clean · consultoria) ----------
+// ---------- Paleta oficial Enaex/MTi ----------
 const C = {
-  green: "#1f4d3a",
-  greenFill: "rgba(31,77,58,0.10)",
-  neutral: "#cdd1cc",   // não-conforme
-  meta: "#9aa099",      // linha de meta
-  grid: "rgba(0,0,0,0.06)",
-  text: "#6b7174",
-  ink: "#1a1a1a",
+  green: "#3F650F",        // Verde Escuro MTi (dados conformes)
+  greenFill: "rgba(118,189,34,0.14)",
+  neutral: "#E20613",      // Vermelho Enaex (não-conforme / acima da meta)
+  meta: "#868685",         // Cinza MTi (linha de meta)
+  grid: "rgba(56,66,75,0.10)",
+  text: "#868685",         // Cinza MTi
+  ink: "#38424B",          // Cinza Enaex
 };
 
 // Percentis da curva granulométrica na ordem esperada
@@ -249,7 +249,7 @@ function renderKpis(data) {
   const confPct = d80s.length ? (conf / d80s.length) * 100 : 0;
   const confEl = document.getElementById("kpi-conf");
   confEl.textContent = fmtNum(confPct, 0) + "%";
-  confEl.style.color = confPct >= 70 ? C.green : "#9c4a3f";
+  confEl.style.color = confPct >= 70 ? C.green : C.neutral;
   document.getElementById("kpi-conf-hint").textContent = `${fmtInt(conf)} de ${fmtInt(d80s.length)} dentro da meta`;
   document.getElementById("kpi-mass").textContent = fmtNum(mass / 1000, 0) + " kt";
   document.getElementById("kpi-mass-hint").textContent = fmtInt(mass) + " t desmontadas";

@@ -1,28 +1,30 @@
 /* ============================================================
-   Granulometria ROM — padrão Power BI (clean, consultoria)
-   Canvas cinza-claro · tiles brancos · acento Enaex
+   Granulometria ROM — Power BI / consultoria
+   Fundo branco · hairlines · paleta Enaex/MTi
+   Cinza Enaex #38424B · Vermelho #E20613 · Verde MTi #76BD22
+   Verde Escuro #3F650F · Cinza MTi #868685 · Verde texto #2A4F1D
    ============================================================ */
 
 :root {
-  --canvas: #f4f5f7;        /* fundo estilo Power BI */
+  --bg: #ffffff;
   --surface: #ffffff;
+  --surface-alt: #fbfbfc;
 
-  --ink: #1f2421;
-  --ink-2: #41474e;
-  --muted: #7a8088;
-  --faint: #aeb4bb;
+  --ink: #38424B;          /* Cinza Enaex — texto principal */
+  --ink-2: #4a545d;
+  --muted: #868685;        /* Cinza MTi */
+  --faint: #b6babd;
 
-  --rule: #e6e8eb;
+  --rule: #e4e6e9;         /* hairline */
   --rule-soft: #eef0f2;
 
-  --enaex: #1f4d3a;
-  --enaex-ink: #163a2c;
-  --enaex-tint: #eef2ef;
-  --enaex-fill: rgba(31, 77, 58, 0.10);
+  --green: #3F650F;        /* Verde Escuro MTi (dados) */
+  --green-bright: #76BD22; /* Verde MTi (acento) */
+  --green-text: #2A4F1D;   /* verde escuro texto */
+  --green-fill: rgba(118, 189, 34, 0.14);
+  --red: #E20613;          /* Vermelho Enaex (não-conforme) */
 
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.05);
-
-  --radius: 4px;
+  --radius: 3px;
   --font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, Aptos, sans-serif;
 }
 
@@ -31,7 +33,7 @@ html, body { margin: 0; }
 
 body {
   min-height: 100vh;
-  background: var(--canvas);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font);
   font-size: 14px;
@@ -44,12 +46,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 32px;
+  padding: 14px 32px;
   background: var(--surface);
   border-bottom: 1px solid var(--rule);
 }
 .topbar__logo {
-  height: 24px;
+  height: 22px;
   width: auto;
 }
 .topbar__unit {
@@ -64,7 +66,7 @@ body {
 .page {
   width: min(1320px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 24px 0 48px;
+  padding: 26px 0 48px;
 }
 
 .page-head {
@@ -78,15 +80,15 @@ body {
 .eyebrow {
   margin: 0 0 4px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--enaex);
+  color: var(--green);
 }
 .page-head h1 {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.1;
   color: var(--ink);
@@ -107,7 +109,7 @@ body {
 }
 .filter span {
   font-size: 9.5px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -117,15 +119,14 @@ body {
   font-family: var(--font);
   font-size: 12.5px;
   color: var(--ink);
-  background: var(--surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%237a8088' d='M5 6 0 0h10z'/></svg>") no-repeat right 11px center;
+  background: var(--surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23868685' d='M5 6 0 0h10z'/></svg>") no-repeat right 11px center;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 7px 30px 7px 11px;
   min-width: 112px;
   cursor: pointer;
-  box-shadow: var(--shadow);
 }
-.filter select:focus { outline: none; border-color: var(--enaex); }
+.filter select:focus { outline: none; border-color: var(--green-bright); }
 .filter--wide select { min-width: 176px; }
 .filter-reset {
   align-self: flex-end;
@@ -137,10 +138,9 @@ body {
   border-radius: var(--radius);
   padding: 8px 14px;
   cursor: pointer;
-  box-shadow: var(--shadow);
   transition: color 120ms ease, border-color 120ms ease;
 }
-.filter-reset:hover { color: var(--enaex); border-color: var(--enaex); }
+.filter-reset:hover { color: var(--green); border-color: var(--green-bright); }
 
 /* ---------- Status ---------- */
 .status {
@@ -155,10 +155,10 @@ body {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--faint);
 }
-.status.is-loading .status__dot { background: var(--enaex); animation: pulse 1.1s infinite; }
-.status.is-ok .status__dot { background: var(--enaex); }
-.status.is-error .status__dot { background: #b04a3d; }
-.status.is-error { color: #b04a3d; }
+.status.is-loading .status__dot { background: var(--green-bright); animation: pulse 1.1s infinite; }
+.status.is-ok .status__dot { background: var(--green-bright); }
+.status.is-error .status__dot { background: var(--red); }
+.status.is-error { color: var(--red); }
 .status__spacer { flex: 1; }
 .status__time { color: var(--faint); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
@@ -167,29 +167,27 @@ body {
 .kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin-bottom: 14px;
 }
 .kpi {
   background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
   padding: 16px 18px;
   position: relative;
-  overflow: hidden;
 }
 .kpi::before {
   content: "";
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 3px;
-  background: var(--enaex);
+  background: var(--green-bright);
 }
 .kpi__label {
   margin: 0 0 8px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--muted);
@@ -213,13 +211,12 @@ body {
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
 }
 .tile {
   background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
   padding: 16px 18px 14px;
   display: flex;
   flex-direction: column;
@@ -230,7 +227,7 @@ body {
 .tile__head h2 {
   margin: 0;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink);
 }
 .tile__head p {
@@ -257,9 +254,9 @@ body {
   .filters { justify-content: flex-start; }
 }
 @media (max-width: 560px) {
-  .topbar { padding: 11px 18px; }
+  .topbar { padding: 12px 18px; }
   .page { width: calc(100% - 28px); padding-top: 18px; }
-  .kpis { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpis { grid-template-columns: 1fr 1fr; gap: 1px; }
   .filters { gap: 6px; }
   .filter select { min-width: 0; }
 }
