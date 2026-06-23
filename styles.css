@@ -95,7 +95,8 @@ body {
 }
 
 /* ---------- Filters ---------- */
-.filters { display: flex; align-items: flex-end; gap: 10px; }
+.filters { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.filter--wide select { min-width: 190px; }
 .filter { display: flex; flex-direction: column; gap: 4px; }
 .filter span {
   font-size: 10px;

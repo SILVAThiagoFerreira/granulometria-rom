@@ -32,6 +32,10 @@ const fmtInt = (n) => new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 
 const fmtNum = (n, d = 0) =>
   new Intl.NumberFormat("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(n || 0);
 
+const escapeText = (s) => String(s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const escapeAttr = (s) => escapeText(s).replace(/"/g, "&quot;");
+
 const parseDateCell = (v) => {
   if (!v) return null;
   const m = String(v).match(/Date\((\d+),(\d+),(\d+)/);
@@ -185,26 +189,39 @@ function buildRecords(table) {
 function populateFilters() {
   const years = [...new Set(RECORDS.map((r) => r.ano).filter(Boolean))].sort();
   const benches = [...new Set(RECORDS.map((r) => r.banco).filter((v) => v != null))].sort((a, b) => a - b);
+  const plans = [...new Set(RECORDS.map((r) => r.poligonal).filter(Boolean))]
+    .sort((a, b) => String(a).localeCompare(String(b)));
 
   const ySel = document.getElementById("filter-year");
+  const mSel = document.getElementById("filter-month");
   const bSel = document.getElementById("filter-bench");
+  const pSel = document.getElementById("filter-plan");
+
   ySel.innerHTML = `<option value="">Todos os anos</option>` +
     years.map((y) => `<option value="${y}">${y}</option>`).join("");
+  mSel.innerHTML = `<option value="">Todos os meses</option>` +
+    meses.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("");
   bSel.innerHTML = `<option value="">Todos os bancos</option>` +
     benches.map((b) => `<option value="${b}">Banco ${fmtInt(b)}</option>`).join("");
+  pSel.innerHTML = `<option value="">Todos os planos</option>` +
+    plans.map((p) => `<option value="${escapeAttr(p)}">${escapeText(p)}</option>`).join("");
 
-  ySel.onchange = render;
-  bSel.onchange = render;
+  [ySel, mSel, bSel, pSel].forEach((s) => (s.onchange = render));
   document.getElementById("filter-reset").onclick = () => {
-    ySel.value = ""; bSel.value = ""; render();
+    ySel.value = ""; mSel.value = ""; bSel.value = ""; pSel.value = ""; render();
   };
 }
 
 function filtered() {
   const y = document.getElementById("filter-year").value;
+  const mo = document.getElementById("filter-month").value;
   const b = document.getElementById("filter-bench").value;
+  const p = document.getElementById("filter-plan").value;
   return RECORDS.filter((r) =>
-    (!y || String(r.ano) === y) && (!b || String(r.banco) === b)
+    (!y || String(r.ano) === y) &&
+    (!mo || String(r.mes) === mo) &&
+    (!b || String(r.banco) === b) &&
+    (!p || String(r.poligonal) === p)
   );
 }
 
