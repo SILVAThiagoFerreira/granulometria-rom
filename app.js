@@ -20,9 +20,6 @@ const C = {
   ink: "#38424B",
 };
 
-// Percentis da curva granulométrica na ordem esperada
-const PERCENTILES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
-
 // ---------- Plugin: linha-guia (crosshair) ao passar o mouse ----------
 const guideLinePlugin = {
   id: "guideLine",
@@ -176,7 +173,6 @@ function buildRecords(table) {
   for (const r of table.rows) {
     const cell = (i) => (i < 0 ? null : (r.c[i] && r.c[i].v != null ? r.c[i].v : null));
     const d80 = num(cell(f.d80));
-    if (d80 == null) continue; // sem D80 não é útil para granulometria
 
     const dt = parseDateCell(cell(f.data));
     const ano = num(cell(f.ano)) || (dt ? dt.y : null);
@@ -187,6 +183,7 @@ function buildRecords(table) {
       const v = num(cell(cc.i));
       if (v != null) curve[cc.pct] = v;
     }
+    if (!Object.keys(curve).length && d80 == null) continue;
 
     recs.push({
       poligonal: cell(f.poligonal),
@@ -194,7 +191,7 @@ function buildRecords(table) {
       ano, mes, date: dt,
       massa: num(cell(f.massa)) || 0,
       volume: num(cell(f.volume)) || 0,
-      d80,
+      d80: d80 ?? curve[80] ?? null,
       meta: num(cell(f.meta)) || META_D80,
       sph: num(cell(f.sph)),
       curve,
@@ -220,6 +217,8 @@ function populateFilters() {
   const mSel = document.getElementById("filter-month");
   const bSel = document.getElementById("filter-bench");
   const pSel = document.getElementById("filter-plan");
+  const metSel = document.getElementById("filter-metric");
+  const percentiles = availablePercentiles();
 
   ySel.innerHTML = `<option value="">Todos os anos</option>` +
     years.map((y) => `<option value="${y}">${y}</option>`).join("");
@@ -229,10 +228,18 @@ function populateFilters() {
     benches.map((b) => `<option value="${b}">Banco ${fmtInt(b)}</option>`).join("");
   pSel.innerHTML = `<option value="">Todos os planos</option>` +
     plans.map((p) => `<option value="${escapeAttr(p)}">${escapeText(p)}</option>`).join("");
-
-  [ySel, mSel, bSel, pSel].forEach((s) => (s.onchange = render));
+  const currentMetric = metSel.value;
+  metSel.innerHTML = percentiles.map((pct) =>
+    `<option value="${pct}"${String(pct) === String(currentMetric || 80) ? " selected" : ""}>P${pct}</option>`
+  ).join("");
+  if (!metSel.value && percentiles.length) {
+    metSel.value = String(percentiles.includes(80) ? 80 : percentiles[0]);
+  }
+  [ySel, mSel, bSel, pSel, metSel].forEach((s) => (s.onchange = render));
   document.getElementById("filter-reset").onclick = () => {
-    ySel.value = ""; mSel.value = ""; bSel.value = ""; pSel.value = ""; render();
+    ySel.value = ""; mSel.value = ""; bSel.value = ""; pSel.value = "";
+    metSel.value = String(percentiles.includes(80) ? 80 : (percentiles[0] ?? 80));
+    render();
   };
 }
 
@@ -249,16 +256,43 @@ function filtered() {
   );
 }
 
+// Percentil selecionado a partir das colunas Dxx disponíveis na base.
+function currentPct() {
+  return parseInt(document.getElementById("filter-metric").value, 10) || 80;
+}
+const hasMeta = (pct) => pct === 80;
+function availablePercentiles(data = RECORDS) {
+  return [...new Set(
+    data.flatMap((r) => Object.keys(r.curve || {}).map((pct) => +pct).filter(Number.isFinite))
+  )].sort((a, b) => a - b);
+}
+// valores do percentil informado, entre os registros do filtro
+function metricVals(data, pct) {
+  return data.map((r) => r.curve[pct]).filter((v) => v != null);
+}
+
 // ---------- Render ----------
 function render() {
   const data = filtered();
-  renderKpis(data);
+  const pct = currentPct();
+  const tag = "P" + pct;
+  setText("title-dist", "Distribuição " + tag);
+  setText("title-peritem", tag + " por desmonte");
+  setText("sub-peritem", hasMeta(pct) ? "Linha: meta 400 mm · clique para filtrar por plano" : "Clique para filtrar por plano");
+  setText("title-bench", tag + " médio por banco");
+  setText("title-trend", "Evolução " + tag);
+  renderKpis(data, pct);
   renderCurve(data);
-  renderHist(data);
-  renderD80(data);
-  renderBench(data);
-  renderTrend(data);
+  renderHist(data, pct);
+  renderPerItem(data, pct);
+  renderBench(data, pct);
+  renderTrend(data, pct);
   updateActiveFilters();
+}
+
+function setText(id, txt) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = txt;
 }
 
 // ---------- Chips de filtros ativos ----------
@@ -295,21 +329,35 @@ function updateActiveFilters() {
   });
 }
 
-function renderKpis(data) {
-  const d80s = data.map((r) => r.d80).filter((v) => v != null);
-  const mean = d80s.length ? d80s.reduce((a, b) => a + b, 0) / d80s.length : 0;
-  const conf = d80s.filter((v) => v <= META_D80).length;
+function renderKpis(data, pct) {
+  const vals = metricVals(data, pct);
+  const mean = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
   const mass = data.reduce((a, r) => a + (r.massa || 0), 0);
+  const tag = "P" + pct;
 
   document.getElementById("kpi-count").textContent = fmtInt(data.length);
   document.getElementById("kpi-count-hint").textContent =
     data.length ? `${fmtInt(data.length)} desmontes no filtro` : " ";
+  setText("kpi-d80-label", tag + " médio");
   document.getElementById("kpi-d80").textContent = fmtNum(mean, 0) + " mm";
-  const confPct = d80s.length ? (conf / d80s.length) * 100 : 0;
+  setText("kpi-d80-sub", vals.length ? `${fmtInt(vals.length)} com dado de ${tag}` : "—");
+
   const confEl = document.getElementById("kpi-conf");
-  confEl.textContent = fmtNum(confPct, 0) + "%";
-  confEl.style.color = confPct >= 70 ? C.green : C.neutral;
-  document.getElementById("kpi-conf-hint").textContent = `${fmtInt(conf)} de ${fmtInt(d80s.length)} dentro da meta`;
+  if (hasMeta(pct)) {
+    setText("kpi-conf-label", "Conformidade " + tag);
+    const conf = vals.filter((v) => v <= META_D80).length;
+    const confPct = vals.length ? (conf / vals.length) * 100 : 0;
+    confEl.textContent = fmtNum(confPct, 0) + "%";
+    confEl.style.color = confPct >= 70 ? C.green : C.neutral;
+    document.getElementById("kpi-conf-hint").textContent = `${fmtInt(conf)} de ${fmtInt(vals.length)} dentro da meta`;
+  } else {
+    setText("kpi-conf-label", "Faixa (min–máx)");
+    const min = vals.length ? Math.min(...vals) : 0;
+    const max = vals.length ? Math.max(...vals) : 0;
+    confEl.textContent = vals.length ? `${fmtNum(min, 0)}–${fmtNum(max, 0)}` : "—";
+    confEl.style.color = C.ink;
+    document.getElementById("kpi-conf-hint").textContent = vals.length ? `amplitude de ${tag} (mm)` : "—";
+  }
   document.getElementById("kpi-mass").textContent = fmtNum(mass / 1000, 0) + " kt";
   document.getElementById("kpi-mass-hint").textContent = fmtInt(mass) + " t desmontadas";
 }
@@ -358,7 +406,7 @@ function renderCurve(data) {
 }
 
 function pickCurvePoints(data, minCount) {
-  return PERCENTILES
+  return availablePercentiles(data)
     .map((pct) => {
       const vals = data.map((r) => r.curve[pct]).filter((v) => v != null);
       if (vals.length < minCount) return null;
@@ -367,19 +415,25 @@ function pickCurvePoints(data, minCount) {
     .filter(Boolean)
     .sort((a, b) => a.pct - b.pct);
 }
-function renderHist(data) {
-  const buckets = [
-    { lo: 0, hi: 200, label: "0–200" },
-    { lo: 200, hi: 300, label: "200–300" },
-    { lo: 300, hi: 400, label: "300–400" },
-    { lo: 400, hi: 500, label: "400–500" },
-    { lo: 500, hi: 700, label: "500–700" },
-    { lo: 700, hi: 1100, label: "700+" },
-  ];
-  const counts = buckets.map((b) =>
-    data.filter((r) => r.d80 >= b.lo && r.d80 < b.hi).length
+function renderHist(data, pct) {
+  const vals = metricVals(data, pct);
+  // P80 usa faixas fixas (centradas na meta de 400); demais usam faixas adaptativas
+  const buckets = (hasMeta(pct) && vals.length)
+    ? [
+        { lo: 0, hi: 200, label: "0–200" },
+        { lo: 200, hi: 300, label: "200–300" },
+        { lo: 300, hi: 400, label: "300–400" },
+        { lo: 400, hi: 500, label: "400–500" },
+        { lo: 500, hi: 700, label: "500–700" },
+        { lo: 700, hi: Infinity, label: "700+" },
+      ]
+    : adaptiveBins(vals);
+
+  const counts = buckets.map((b, i) =>
+    vals.filter((v) => v >= b.lo && (i === buckets.length - 1 ? v <= b.hi : v < b.hi)).length
   );
-  const colors = buckets.map((b) => (b.hi <= META_D80 + 1 ? C.green : C.neutral));
+  const colors = buckets.map((b) => (hasMeta(pct) && b.hi <= META_D80 + 1 ? C.green : (hasMeta(pct) ? C.neutral : C.green)));
+  const hover = buckets.map((b) => (hasMeta(pct) && b.hi <= META_D80 + 1 ? "#2b333a" : (hasMeta(pct) ? "#b80510" : "#2b333a")));
 
   buildChart("chart-hist", "bar", {
     type: "bar",
@@ -389,7 +443,7 @@ function renderHist(data) {
         label: "Desmontes",
         data: counts,
         backgroundColor: colors,
-        hoverBackgroundColor: buckets.map((b) => (b.hi <= META_D80 + 1 ? "#2b333a" : "#b80510")),
+        hoverBackgroundColor: hover,
         borderRadius: 3,
         maxBarThickness: 56,
       }],
@@ -398,42 +452,62 @@ function renderHist(data) {
   });
 }
 
-// --- D80 por desmonte vs meta ---
-function renderD80(data) {
+// Faixas adaptativas ("nice bins") com base no intervalo dos dados
+function adaptiveBins(vals) {
+  if (!vals.length) return [{ lo: 0, hi: 1, label: "—" }];
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const n = 6;
+  const raw = (max - min) / n || 1;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const base = raw / pow;
+  const nice = (base <= 1 ? 1 : base <= 2 ? 2 : base <= 5 ? 5 : 10) * pow;
+  const lo = Math.floor(min / nice) * nice;
+  const bins = [];
+  for (let i = 0; i <= n; i++) {
+    const a = lo + i * nice;
+    bins.push({ lo: a, hi: a + nice, label: fmtNum(a, 0) + "–" + fmtNum(a + nice, 0) });
+  }
+  return bins;
+}
+
+// --- P{X} por desmonte (meta 400 só em P80) ---
+function renderPerItem(data, pct) {
+  const tag = "P" + pct;
+  const meta = hasMeta(pct);
   const ordered = [...data].sort((a, b) => sortDate(a, b));
   const labels = ordered.map((r) => labelRec(r));
-  const values = ordered.map((r) => r.d80);
-  const meta = ordered.map((r) => r.meta || META_D80);
-  const colors = values.map((v) => (v <= META_D80 ? C.green : C.neutral));
+  const values = ordered.map((r) => r.curve[pct]);
+  const barColors = values.map((v) => (meta ? (v <= META_D80 ? C.green : C.neutral) : C.green));
+  const barHover = values.map(() => "#2b333a");
+
+  const datasets = [{
+    type: "bar",
+    label: tag + " (mm)",
+    data: values,
+    backgroundColor: barColors,
+    hoverBackgroundColor: meta ? values.map((v) => (v <= META_D80 ? "#2b333a" : "#b80510")) : barHover,
+    order: 2,
+  }];
+  if (meta) {
+    datasets.push({
+      type: "line",
+      label: "Meta 400 mm",
+      data: values.map(() => META_D80),
+      borderColor: C.meta,
+      borderWidth: 1.5,
+      borderDash: [5, 4],
+      pointRadius: 0,
+      fill: false,
+      order: 1,
+    });
+  }
 
   buildChart("chart-d80", "bar", {
-    data: {
-      labels,
-      datasets: [
-        {
-          type: "bar",
-          label: "D80 (mm)",
-          data: values,
-          backgroundColor: colors,
-          hoverBackgroundColor: values.map((v) => (v <= META_D80 ? "#2b333a" : "#b80510")),
-          order: 2,
-        },
-        {
-          type: "line",
-          label: "Meta 400 mm",
-          data: meta,
-          borderColor: C.meta,
-          borderWidth: 1.5,
-          borderDash: [5, 4],
-          pointRadius: 0,
-          fill: false,
-          order: 1,
-        },
-      ],
-    },
-    options: barOpts("D80 (mm)", {
+    data: { labels, datasets },
+    options: barOpts(tag + " (mm)", {
       plugins: {
-        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
+        legend: { display: meta, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
         tooltip: {
           callbacks: {
             title: (items) => {
@@ -443,15 +517,18 @@ function renderD80(data) {
             label: (it) => {
               if (it.dataset.type === "line") return "Meta: " + fmtNum(it.parsed.y, 0) + " mm";
               const r = ordered[it.dataIndex];
-              const status = r.d80 <= META_D80 ? "✓ dentro da meta" : "✗ acima da meta";
-              return [`D80: ${fmtNum(r.d80, 1)} mm`, `Banco: ${r.banco != null ? fmtInt(r.banco) : "—"}`, `${status}`];
+              const v = r.curve[pct];
+              const status = meta ? (v <= META_D80 ? "✓ dentro da meta" : "✗ acima da meta") : null;
+              const lines = [`${tag}: ${v != null ? fmtNum(v, 1) : "—"} mm`, `Banco: ${r.banco != null ? fmtInt(r.banco) : "—"}`];
+              if (status) lines.push(status);
+              return lines;
             },
           },
         },
       },
       scales: {
         x: scaleTicks(),
-        y: scaleY("D80 (mm)"),
+        y: scaleY(tag + " (mm)"),
       },
     }),
   });
@@ -471,12 +548,16 @@ function renderD80(data) {
   }
 }
 
-// --- D80 médio por banco ---
-function renderBench(data) {
+// --- P{X} médio por banco ---
+function renderBench(data, pct) {
+  const tag = "P" + pct;
+  const meta = hasMeta(pct);
   const groups = {};
   data.forEach((r) => {
     if (r.banco == null) return;
-    (groups[r.banco] = groups[r.banco] || []).push(r.d80);
+    const value = r.curve[pct];
+    if (value == null) return;
+    (groups[r.banco] = groups[r.banco] || []).push(value);
   });
   const entries = Object.entries(groups)
     .map(([b, arr]) => ({ b: +b, mean: arr.reduce((a, c) => a + c, 0) / arr.length, n: arr.length }))
@@ -487,10 +568,10 @@ function renderBench(data) {
     data: {
       labels: entries.map((e) => "Bco " + fmtInt(e.b)),
       datasets: [{
-        label: "D80 médio (mm)",
+        label: `${tag} médio (mm)`,
         data: entries.map((e) => e.mean),
-        backgroundColor: entries.map((e) => (e.mean <= META_D80 ? C.green : C.neutral)),
-        hoverBackgroundColor: entries.map((e) => (e.mean <= META_D80 ? "#2b333a" : "#b80510")),
+        backgroundColor: entries.map((e) => (meta ? (e.mean <= META_D80 ? C.green : C.neutral) : C.green)),
+        hoverBackgroundColor: entries.map((e) => (meta ? (e.mean <= META_D80 ? "#2b333a" : "#b80510") : "#2b333a")),
         borderRadius: 3,
       }],
     },
@@ -513,10 +594,10 @@ function renderBench(data) {
       },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (it) => `D80 médio: ${fmtNum(it.parsed.x, 0)} mm · clique para filtrar` } },
+        tooltip: { callbacks: { label: (it) => `${tag} médio: ${fmtNum(it.parsed.x, 0)} mm · clique para filtrar` } },
       },
       scales: {
-        x: scaleY("D80 médio (mm)"),
+        x: scaleY(`${tag} médio (mm)`),
         y: { ...scaleTicks(), grid: { display: false } },
       },
     },
@@ -524,12 +605,16 @@ function renderBench(data) {
 }
 
 // --- Evolução temporal (média mensal) ---
-function renderTrend(data) {
+function renderTrend(data, pct) {
+  const tag = "P" + pct;
+  const meta = hasMeta(pct);
   const groups = {};
   data.forEach((r) => {
     if (!r.ano || !r.mes) return;
+    const value = r.curve[pct];
+    if (value == null) return;
     const k = r.ano + "-" + String(r.mes).padStart(2, "0");
-    (groups[k] = groups[k] || []).push(r.d80);
+    (groups[k] = groups[k] || []).push(value);
   });
   const keys = Object.keys(groups).sort();
   const means = keys.map((k) => {
@@ -540,38 +625,42 @@ function renderTrend(data) {
     const [y, m] = k.split("-");
     return meses[+m - 1] + "/" + y.slice(2);
   });
+  const datasets = [{
+    label: `${tag} médio mensal (mm)`,
+    data: means,
+    borderColor: C.green,
+    backgroundColor: C.greenFill,
+    borderWidth: 2,
+    pointBackgroundColor: "#ffffff",
+    pointBorderColor: C.green,
+    pointBorderWidth: 1.5,
+    pointRadius: 3,
+    pointHoverRadius: 6,
+    tension: 0.3,
+    fill: true,
+  }];
+  if (meta) {
+    datasets.push({
+      type: "line",
+      label: "Meta 400 mm",
+      data: labels.map(() => META_D80),
+      borderColor: C.meta,
+      borderWidth: 1.5,
+      borderDash: [5, 4],
+      pointRadius: 0,
+      fill: false,
+    });
+  }
 
   buildChart("chart-trend", "line", {
     type: "line",
     data: {
       labels,
-      datasets: [{
-        label: "D80 médio mensal (mm)",
-        data: means,
-        borderColor: C.green,
-        backgroundColor: C.greenFill,
-        borderWidth: 2,
-        pointBackgroundColor: "#ffffff",
-        pointBorderColor: C.green,
-        pointBorderWidth: 1.5,
-        pointRadius: 3,
-        pointHoverRadius: 6,
-        tension: 0.3,
-        fill: true,
-      }, {
-        type: "line",
-        label: "Meta 400 mm",
-        data: labels.map(() => META_D80),
-        borderColor: C.meta,
-        borderWidth: 1.5,
-        borderDash: [5, 4],
-        pointRadius: 0,
-        fill: false,
-      }],
+      datasets,
     },
-    options: lineOpts("D80 médio (mm)", {
+    options: lineOpts(`${tag} médio (mm)`, {
       plugins: {
-        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
+        legend: { display: meta, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
       },
     }),
   });

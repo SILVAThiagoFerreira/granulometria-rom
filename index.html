@@ -22,6 +22,10 @@
       </div>
       <div class="filters">
         <label class="filter">
+          <span>Percentil</span>
+          <select id="filter-metric"><option value="80">Carregando...</option></select>
+        </label>
+        <label class="filter">
           <span>Ano</span>
           <select id="filter-year"></select>
         </label>
@@ -57,12 +61,12 @@
         <p class="kpi__sub" id="kpi-count-hint">&nbsp;</p>
       </div>
       <div class="kpi">
-        <p class="kpi__label">D80 médio</p>
+        <p class="kpi__label" id="kpi-d80-label">P80 médio</p>
         <p class="kpi__value" id="kpi-d80">—</p>
-        <p class="kpi__sub">Meta ≤ 400 mm</p>
+        <p class="kpi__sub" id="kpi-d80-sub">Meta ≤ 400 mm</p>
       </div>
       <div class="kpi">
-        <p class="kpi__label">Conformidade D80</p>
+        <p class="kpi__label" id="kpi-conf-label">Conformidade P80</p>
         <p class="kpi__value" id="kpi-conf">—</p>
         <p class="kpi__sub" id="kpi-conf-hint">—</p>
       </div>
@@ -84,7 +88,7 @@
 
       <div class="tile">
         <div class="tile__head">
-          <h2>Distribuição D80</h2>
+          <h2 id="title-dist">Distribuição P80</h2>
           <p>Desmontes por faixa (mm)</p>
         </div>
         <div class="tile__chart"><canvas id="chart-hist"></canvas></div>
@@ -92,15 +96,15 @@
 
       <div class="tile tile--wide">
         <div class="tile__head">
-          <h2>D80 por desmonte</h2>
-          <p>Linha: meta 400 mm</p>
+          <h2 id="title-peritem">P80 por desmonte</h2>
+          <p id="sub-peritem">Linha: meta 400 mm</p>
         </div>
         <div class="tile__chart tile__chart--tall"><canvas id="chart-d80"></canvas></div>
       </div>
 
       <div class="tile">
         <div class="tile__head">
-          <h2>D80 médio por banco</h2>
+          <h2 id="title-bench">P80 médio por banco</h2>
           <p>Por bancada</p>
         </div>
         <div class="tile__chart"><canvas id="chart-bench"></canvas></div>
@@ -108,7 +112,7 @@
 
       <div class="tile">
         <div class="tile__head">
-          <h2>Evolução D80</h2>
+          <h2 id="title-trend">Evolução P80</h2>
           <p>Média mensal</p>
         </div>
         <div class="tile__chart"><canvas id="chart-trend"></canvas></div>
