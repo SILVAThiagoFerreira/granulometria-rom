@@ -766,7 +766,9 @@ document.addEventListener("DOMContentLoaded", () => {
   Chart.defaults.font.size = 7;
   Chart.defaults.color = "#6c747b";
   Chart.defaults.borderColor = "rgba(56,66,75,0.08)";
-  Chart.defaults.plugins.tooltip = tooltipBase();
+  // Merge into the existing defaults (Object.assign) — replacing the whole object
+  // would wipe Chart.js's built-in tooltip callbacks and the tooltip would never render.
+  Object.assign(Chart.defaults.plugins.tooltip, tooltipBase());
   Chart.register(guideLinePlugin);
   loadSheet().catch((e) => console.error(e));
   setInterval(() => loadSheet().catch(() => {}), 10 * 60 * 1000);
