@@ -10,13 +10,13 @@ const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?form
 const META_D80 = 400;
 
 const C = {
-  green: "#38424B",
-  greenFill: "rgba(56,66,75,0.09)",
+  green: "#323130",
+  greenFill: "rgba(50,49,48,0.06)",
   neutral: "#E20613",
-  meta: "#aab0b6",
-  grid: "rgba(56,66,75,0.10)",
-  text: "#6c747b",
-  ink: "#38424B",
+  meta: "#c8c6c4",
+  grid: "rgba(0,0,0,0.06)",
+  text: "#605e5c",
+  ink: "#252525",
 };
 
 const guideLinePlugin = {
@@ -32,7 +32,7 @@ const guideLinePlugin = {
     const area = chart.chartArea;
     ctx.save();
     ctx.beginPath();
-    ctx.strokeStyle = "rgba(56,66,75,0.30)";
+    ctx.strokeStyle = "rgba(0,0,0,0.18)";
     ctx.lineWidth = 1;
     ctx.setLineDash([3, 3]);
     if (horizontal) { ctx.moveTo(area.left, el.y); ctx.lineTo(area.right, el.y); }
@@ -680,15 +680,17 @@ function baseOpts() {
 function tooltipBase() {
   return {
     backgroundColor: "#ffffff",
-    titleColor: C.ink,
-    bodyColor: C.ink,
-    borderColor: C.grid,
+    titleColor: "#252525",
+    bodyColor: "#3d3d3d",
+    borderColor: "#edebe9",
     borderWidth: 1,
     padding: 10,
-    cornerRadius: 2,
-    displayColors: false,
-    titleFont: { weight: "600", size: 12 },
-    bodyFont: { size: 12 },
+    cornerRadius: 3,
+    displayColors: true,
+    boxPadding: 4,
+    titleFont: { weight: "600", size: 11 },
+    bodyFont: { size: 11 },
+    bodySpacing: 4,
   };
 }
 function lineOpts(yTitle, extra = {}) {
@@ -747,10 +749,10 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatus("error", "Biblioteca de gráficos (Chart.js) não carregou. Verifique sua conexão.");
     return;
   }
-  Chart.defaults.font.family = "'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+  Chart.defaults.font.family = "'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif";
   Chart.defaults.font.size = 7;
-  Chart.defaults.color = C.text;
-  Chart.defaults.borderColor = C.grid;
+  Chart.defaults.color = "#605e5c";
+  Chart.defaults.borderColor = "rgba(0,0,0,0.06)";
   Chart.defaults.plugins.tooltip = tooltipBase();
   Chart.register(guideLinePlugin);
   loadSheet().catch((e) => console.error(e));
