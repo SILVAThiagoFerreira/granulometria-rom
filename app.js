@@ -429,7 +429,7 @@ function renderD80(data) {
     },
     options: barOpts("D80 (mm)", {
       plugins: {
-        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
+        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 12, font: { size: 9 } } },
         tooltip: {
           callbacks: {
             title: (items) => {
@@ -564,7 +564,7 @@ function renderTrend(data) {
     },
     options: lineOpts("D80 médio (mm)", {
       plugins: {
-        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 14 } },
+        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 12, font: { size: 9 } } },
       },
     }),
   });
@@ -708,12 +708,12 @@ function barOpts(yTitle, extra = {}) {
   });
 }
 function scaleTicks() {
-  return { ticks: { color: C.text, font: { size: 11 } }, border: { color: C.grid } };
+  return { ticks: { color: C.text, font: { size: 9 } }, border: { color: C.grid } };
 }
 function scaleY(title) {
   return {
-    title: { display: !!title, text: title, color: C.text, font: { size: 11, weight: "bold" } },
-    ticks: { color: C.text, font: { size: 11 } },
+    title: { display: !!title, text: title, color: C.text, font: { size: 9, weight: "bold" } },
+    ticks: { color: C.text, font: { size: 9 } },
     grid: { color: C.grid },
     border: { color: C.grid },
   };
@@ -748,7 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
   Chart.defaults.font.family = "'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
-  Chart.defaults.font.size = 11;
+  Chart.defaults.font.size = 9;
   Chart.defaults.color = C.text;
   Chart.defaults.borderColor = C.grid;
   Chart.defaults.plugins.tooltip = tooltipBase();
