@@ -507,7 +507,7 @@ function renderBench(data) {
       },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (it) => `D80 médio: ${fmtNum(it.parsed.x, 0)} mm · clique para filtrar` } },
+        tooltip: { ...tooltipBase(), callbacks: { label: (it) => `D80 médio: ${fmtNum(it.parsed.x, 0)} mm` } },
       },
       scales: {
         x: scaleY("D80 médio (mm)"),
@@ -636,6 +636,7 @@ function renderExtraCharts(data) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: "nearest", intersect: true },
         plugins: { legend: { display: false }, tooltip: tooltipBase() },
         scales: {
           x: { ticks: { color: C.text, font: { size: 7 }, maxRotation: 45, autoSkip: true }, border: { color: C.grid } },
@@ -679,22 +680,33 @@ function baseOpts() {
 }
 function tooltipBase() {
   return {
-    backgroundColor: "#ffffff",
+    enabled: true,
+    backgroundColor: "rgba(255,255,255,0.98)",
     titleColor: "#38424B",
     bodyColor: "#4c555d",
-    borderColor: "#e6e8ea",
+    borderColor: "#d2d0ce",
     borderWidth: 1,
-    padding: 10,
-    cornerRadius: 3,
+    padding: 12,
+    cornerRadius: 4,
+    caretSize: 8,
+    caretPadding: 6,
     displayColors: true,
+    boxWidth: 10,
+    boxHeight: 10,
     boxPadding: 4,
-    titleFont: { weight: "600", size: 11 },
+    titleFont: { weight: "700", size: 12 },
     bodyFont: { size: 11 },
-    bodySpacing: 4,
+    bodySpacing: 5,
+    usePointStyle: false,
+    shadowOffsetX: 0,
+    shadowOffsetY: 2,
+    shadowBlur: 8,
+    shadowColor: "rgba(0,0,0,0.12)",
   };
 }
 function lineOpts(yTitle, extra = {}) {
   return deepMerge(baseOpts(), {
+    interaction: { mode: "index", intersect: false },
     plugins: extra.plugins || {},
     scales: {
       x: { ...scaleTicks(), grid: { display: false } },
@@ -705,6 +717,7 @@ function lineOpts(yTitle, extra = {}) {
 }
 function barOpts(yTitle, extra = {}) {
   return deepMerge(baseOpts(), {
+    interaction: { mode: "nearest", intersect: true },
     plugins: extra.plugins || {},
     scales: { x: scaleTicks(), y: scaleY(yTitle) },
   });
