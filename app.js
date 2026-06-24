@@ -341,12 +341,12 @@ function renderCurve(data) {
     },
     options: lineOpts("Abertura (mm)", {
       plugins: {
-        tooltip: {
+        tooltip: tooltipCfg({
           callbacks: {
             title: (items) => "Passante: " + items[0].label,
             label: (it) => fmtNum(it.parsed.y, 1) + " mm",
           },
-        },
+        }),
       },
     }),
   });
@@ -430,12 +430,21 @@ function renderD80(data) {
     options: barOpts("D80 (mm)", {
       plugins: {
         legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 12, font: { size: 10 }, padding: 14 } },
-        tooltip: {
+        tooltip: tooltipCfg({
           callbacks: {
             title: (items) => {
               const r = ordered[items[0].dataIndex];
               return "Plano " + (r.poligonal || "—");
             },
+            label: (it) => {
+              if (it.dataset.type === "line") return "Meta: " + fmtNum(it.parsed.y, 0) + " mm";
+              const r = ordered[it.dataIndex];
+              const status = r.d80 != null ? (r.d80 <= META_D80 ? "✓ dentro da meta" : "✗ acima da meta") : null;
+              return [`D80: ${r.d80 != null ? fmtNum(r.d80, 1) : "—"} mm`, `Banco: ${r.banco != null ? fmtInt(r.banco) : "—"}`, status].filter(Boolean);
+            },
+          },
+        }),
+      },
             label: (it) => {
               if (it.dataset.type === "line") return "Meta: " + fmtNum(it.parsed.y, 0) + " mm";
               const r = ordered[it.dataIndex];
@@ -507,7 +516,7 @@ function renderBench(data) {
       },
       plugins: {
         legend: { display: false },
-        tooltip: { ...tooltipBase(), callbacks: { label: (it) => `D80 médio: ${fmtNum(it.parsed.x, 0)} mm` } },
+        tooltip: tooltipCfg({ callbacks: { label: (it) => `D80 médio: ${fmtNum(it.parsed.x, 0)} mm` } }),
       },
       scales: {
         x: scaleY("D80 médio (mm)"),
@@ -637,7 +646,7 @@ function renderExtraCharts(data) {
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
-        plugins: { legend: { display: false }, tooltip: tooltipBase() },
+        plugins: { legend: { display: false }, tooltip: tooltipCfg() },
         scales: {
           x: { ticks: { color: C.text, font: { size: 7 }, maxRotation: 45, autoSkip: true }, border: { color: C.grid } },
           y: { ticks: { color: C.text, font: { size: 7 } }, border: { color: C.grid }, grid: { color: C.grid } },
@@ -674,9 +683,11 @@ function baseOpts() {
     hover: { mode: "index", intersect: false },
     plugins: {
       legend: { display: false },
-      tooltip: tooltipBase(),
     },
   };
+}
+function tooltipCfg(extra) {
+  return Object.assign({}, tooltipBase(), extra || {});
 }
 function tooltipBase() {
   return {
@@ -700,22 +711,24 @@ function tooltipBase() {
     usePointStyle: false,
   };
 }
-function lineOpts(yTitle, extra = {}) {
-  return deepMerge(baseOpts(), {
+function lineOpts(yTitle, extra) {
+  const base = baseOpts();
+  return Object.assign({}, base, {
     interaction: { mode: "index", intersect: false },
-    plugins: extra.plugins || {},
     scales: {
-      x: { ...scaleTicks(), grid: { display: false } },
+      x: Object.assign({}, scaleTicks(), { grid: { display: false } }),
       y: scaleY(yTitle),
     },
     elements: { line: { borderJoinStyle: "round" } },
+    plugins: Object.assign({}, base.plugins, (extra && extra.plugins) || {}),
   });
 }
-function barOpts(yTitle, extra = {}) {
-  return deepMerge(baseOpts(), {
+function barOpts(yTitle, extra) {
+  const base = baseOpts();
+  return Object.assign({}, base, {
     interaction: { mode: "index", intersect: false },
-    plugins: extra.plugins || {},
     scales: { x: scaleTicks(), y: scaleY(yTitle) },
+    plugins: Object.assign({}, base.plugins, (extra && extra.plugins) || {}),
   });
 }
 function scaleTicks() {
