@@ -445,15 +445,6 @@ function renderD80(data) {
           },
         }),
       },
-            label: (it) => {
-              if (it.dataset.type === "line") return "Meta: " + fmtNum(it.parsed.y, 0) + " mm";
-              const r = ordered[it.dataIndex];
-              const status = r.d80 != null ? (r.d80 <= META_D80 ? "✓ dentro da meta" : "✗ acima da meta") : null;
-              return [`D80: ${r.d80 != null ? fmtNum(r.d80, 1) : "—"} mm`, `Banco: ${r.banco != null ? fmtInt(r.banco) : "—"}`, status].filter(Boolean);
-            },
-          },
-        },
-      },
       scales: {
         x: scaleTicks(),
         y: scaleY("D80 (mm)"),
