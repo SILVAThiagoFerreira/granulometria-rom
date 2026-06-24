@@ -429,7 +429,7 @@ function renderD80(data) {
     },
     options: barOpts("D80 (mm)", {
       plugins: {
-        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 10, font: { size: 7 } } },
+        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 12, font: { size: 10 }, padding: 14 } },
         tooltip: {
           callbacks: {
             title: (items) => {
@@ -564,7 +564,7 @@ function renderTrend(data) {
     },
     options: lineOpts("D80 médio (mm)", {
       plugins: {
-        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 10, font: { size: 7 } } },
+        legend: { display: true, position: "bottom", labels: { color: C.text, boxWidth: 12, font: { size: 10 }, padding: 14 } },
       },
     }),
   });
