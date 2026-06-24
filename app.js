@@ -492,7 +492,7 @@ function renderBench(data) {
       indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: "nearest", intersect: true },
+      interaction: { mode: "index", intersect: false },
       onClick: (_evt, els) => {
         if (!els.length) return;
         const e = entries[els[0].index];
@@ -636,7 +636,7 @@ function renderExtraCharts(data) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: { mode: "nearest", intersect: true },
+        interaction: { mode: "index", intersect: false },
         plugins: { legend: { display: false }, tooltip: tooltipBase() },
         scales: {
           x: { ticks: { color: C.text, font: { size: 7 }, maxRotation: 45, autoSkip: true }, border: { color: C.grid } },
@@ -681,15 +681,15 @@ function baseOpts() {
 function tooltipBase() {
   return {
     enabled: true,
-    backgroundColor: "rgba(255,255,255,0.98)",
-    titleColor: "#38424B",
-    bodyColor: "#4c555d",
-    borderColor: "#d2d0ce",
-    borderWidth: 1,
+    backgroundColor: "rgba(56,66,75,0.95)",
+    titleColor: "#ffffff",
+    bodyColor: "#e8e8e8",
+    borderColor: "#38424B",
+    borderWidth: 0,
     padding: 12,
     cornerRadius: 4,
     caretSize: 8,
-    caretPadding: 6,
+    caretPadding: 8,
     displayColors: true,
     boxWidth: 10,
     boxHeight: 10,
@@ -698,10 +698,6 @@ function tooltipBase() {
     bodyFont: { size: 11 },
     bodySpacing: 5,
     usePointStyle: false,
-    shadowOffsetX: 0,
-    shadowOffsetY: 2,
-    shadowBlur: 8,
-    shadowColor: "rgba(0,0,0,0.12)",
   };
 }
 function lineOpts(yTitle, extra = {}) {
@@ -717,7 +713,7 @@ function lineOpts(yTitle, extra = {}) {
 }
 function barOpts(yTitle, extra = {}) {
   return deepMerge(baseOpts(), {
-    interaction: { mode: "nearest", intersect: true },
+    interaction: { mode: "index", intersect: false },
     plugins: extra.plugins || {},
     scales: { x: scaleTicks(), y: scaleY(yTitle) },
   });
